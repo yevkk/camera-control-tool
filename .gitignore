@@ -1,0 +1,10 @@
+#build folder
+build/
+
+#EDSDK folders
+src/edsdk/lib
+src/edsdk/include
+
+# CLion project folder and build 
+.idea/
+src/cmake-build-debug/
