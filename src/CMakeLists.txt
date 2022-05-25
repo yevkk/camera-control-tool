@@ -12,6 +12,7 @@ set(EDSDK_LIB_DIR ${EDSDK_DIR}/lib)
 set(SRC_LIST
         edsdk_wrapper.hpp
         edsdk_wrapper.cpp
+        logger.hpp
         )
 
 add_executable(main main.cpp ${SRC_LIST})
