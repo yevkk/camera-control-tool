@@ -1,11 +1,17 @@
 #ifndef EDSDK_WRAPPER_HPP
 #define EDSDK_WRAPPER_HPP
 
-#include <EDSDK.h>
-#include <EDSDKErrors.h>
-#include <EDSDKTypes.h>
-
 namespace edsdk_w {
+    class EDSDK {
+    public:
+        static EDSDK& get_instance();
+
+        EDSDK(EDSDK const&) = delete;
+        void operator=(EDSDK &) = delete;
+    private:
+        EDSDK();
+        ~EDSDK();
+    };
 
 
 } //namespace edsdk_w
