@@ -21,6 +21,9 @@ namespace edsdk_w {
 
             ~Camera();
 
+            template <typename T>
+            T _retrieve_property(EdsUInt32 prop_id);
+
             struct {
                 //props
             } properties;
