@@ -564,6 +564,74 @@ namespace edsdk_w {
         }
     }
 
+    std::string EDSDK::Camera::get_name() {
+        return _properties.name;
+    }
+
+    std::string EDSDK::Camera::get_current_storage() {
+        return _properties.current_storage;
+    }
+
+    std::string EDSDK::Camera::get_body_id() {
+        return _properties.body_id;
+    }
+
+    std::string EDSDK::Camera::get_firmware_version() {
+        return _properties.firmware_version;
+    }
+
+    std::string EDSDK::Camera::get_image_quality() {
+        return EDSDK::explain_prop_value(kEdsPropID_ImageQuality, _properties.image_quality);
+    }
+
+    std::string EDSDK::Camera::get_ae_mode() {
+        return EDSDK::explain_prop_value(kEdsPropID_AEMode, _properties.ae_mode);
+    }
+
+    std::string EDSDK::Camera::get_af_mode() {
+        return EDSDK::explain_prop_value(kEdsPropID_AFMode, _properties.af_mode);
+    }
+
+    std::string EDSDK::Camera::get_lens_name() {
+        return _properties.lens_name;
+    }
+
+    std::string EDSDK::Camera::get_white_balance() {
+        return EDSDK::explain_prop_value(kEdsPropID_WhiteBalance, _properties.white_balance);
+    }
+
+    std::string EDSDK::Camera::get_color_temperature() {
+        return EDSDK::explain_prop_value(kEdsPropID_ColorTemperature, _properties.color_temperature);
+    }
+
+    std::string EDSDK::Camera::get_color_space() {
+        return EDSDK::explain_prop_value(kEdsPropID_ColorSpace, _properties.color_space);
+    }
+
+    std::string EDSDK::Camera::get_drive_mode() {
+        return EDSDK::explain_prop_value(kEdsPropID_DriveMode, _properties.drive_mode);
+    }
+
+    std::string EDSDK::Camera::get_metering_mode() {
+        return EDSDK::explain_prop_value(kEdsPropID_MeteringMode, _properties.metering_mode);
+    }
+
+    std::string EDSDK::Camera::get_iso() {
+        return EDSDK::explain_prop_value(kEdsPropID_ISOSpeed, _properties.iso);
+    }
+
+    std::string EDSDK::Camera::get_av() {
+        return EDSDK::explain_prop_value(kEdsPropID_Av, _properties.av);
+    }
+
+    std::string EDSDK::Camera::get_tv() {
+        return EDSDK::explain_prop_value(kEdsPropID_Tv, _properties.tv);
+    }
+
+    std::string EDSDK::Camera::get_exposure_compensation() {
+        return EDSDK::explain_prop_value(kEdsPropID_ExposureCompensation, _properties.exposure_compensation);
+    }
+
     template <typename T>
     T EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id, bool open_session) {
         if (open_session) {

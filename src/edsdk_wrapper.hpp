@@ -12,7 +12,25 @@ namespace edsdk_w {
     public:
         class Camera {
         public:
-            //get_prop/set_prop
+            std::string get_name();
+            std::string get_current_storage();
+            std::string get_body_id();
+            std::string get_firmware_version();
+
+            std::string get_image_quality();
+            std::string get_ae_mode();
+            std::string get_af_mode();
+            std::string get_lens_name();
+
+            std::string get_white_balance();
+            std::string get_color_temperature();
+            std::string get_color_space();
+            std::string get_drive_mode();
+            std::string get_metering_mode();
+            std::string get_iso();
+            std::string get_av();
+            std::string get_tv();
+            std::string get_exposure_compensation();
 
         private:
             class SessionRAII;
