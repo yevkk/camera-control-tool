@@ -3,9 +3,32 @@
 
 #include <string>
 #include <vector>
+#include "EDSDKTypes.h"
 
 namespace edsdk_w {
     class EDSDK {
+    public:
+        class Camera {
+        public:
+            //get_prop/set_prop
+
+        private:
+            explicit Camera(EdsCameraRef camera);
+
+            ~Camera();
+
+            struct {
+                //props
+            } properties;
+
+            struct {
+                //props_available_values
+            } properties_constraints;
+
+            EdsCameraRef _camera_ref;
+
+            friend EDSDK;
+        };
     public:
         static EDSDK& get_instance();
 
@@ -15,9 +38,14 @@ namespace edsdk_w {
         std::vector<std::string> get_available_camera_list();
 
         std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
+
+        //set_camera;
+
     private:
         EDSDK();
         ~EDSDK();
+
+        Camera *_camera;
     };
 
 

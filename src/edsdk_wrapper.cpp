@@ -476,5 +476,13 @@ namespace edsdk_w {
 
     }
 
+    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera} {}
+
+    EDSDK::Camera::~Camera()  {
+        if (_camera_ref) {
+            EdsRelease(_camera_ref);
+        }
+    }
+
 } //namespace edsdk_w
 
