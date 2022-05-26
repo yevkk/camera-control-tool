@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include <optional>
+#include <functional>
 #include "EDSDKTypes.h"
 
 namespace edsdk_w {
@@ -39,7 +41,7 @@ namespace edsdk_w {
 
         bool set_camera(std::uint8_t index_in_list);
 
-        Camera &get_camera();
+        std::optional<std::reference_wrapper<Camera>> get_camera();
 
         std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
 

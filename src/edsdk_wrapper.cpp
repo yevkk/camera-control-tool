@@ -463,8 +463,12 @@ namespace edsdk_w {
         return err == EDS_ERR_OK;
     }
 
-    EDSDK::Camera &EDSDK::get_camera() {
-        return *_camera;
+    std::optional<std::reference_wrapper<EDSDK::Camera>> EDSDK::get_camera() {
+        if (_camera) {
+            return *_camera;
+        } else {
+            return std::nullopt;
+        }
     }
 
     std::string EDSDK::explain_prop_value(std::uint32_t prop_id, std::uint32_t value) {
