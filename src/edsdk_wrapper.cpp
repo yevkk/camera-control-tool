@@ -543,36 +543,40 @@ namespace edsdk_w {
     }
 
     template <typename T>
-    T EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id) {
-        SessionRAII camera_raii{_camera_ref};
-        if (!camera_raii.is_valid()) return T{};
+    T EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id, bool open_session) {
+        if (open_session) {
+            SessionRAII camera_raii{_camera_ref};
+            if (!camera_raii.is_valid()) return T{};
+        }
 
         T value;
         EdsError err = EDS_ERR_OK;
         EdsDataType data_type;
         EdsUInt32 data_size;
 
-        err = EdsGetPropertySize(camera_raii.camera(), prop_id, 0, &data_type, &data_size);
+        err = EdsGetPropertySize(_camera_ref, prop_id, 0, &data_type, &data_size);
         if (err == EDS_ERR_OK) {
-            err = EdsGetPropertyData(camera_raii.camera(), prop_id, 0, data_size, &value);
+            err = EdsGetPropertyData(_camera_ref, prop_id, 0, data_size, &value);
         }
 
         return err == EDS_ERR_OK ? value : T{};
     }
 
     template <>
-    std::string EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id) {
-        SessionRAII camera_raii{_camera_ref};
-        if (!camera_raii.is_valid()) return "";
+    std::string EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id, bool open_session) {
+        if (open_session) {
+            SessionRAII camera_raii{_camera_ref};
+            if (!camera_raii.is_valid()) return "";
+        }
 
         char value[EDS_MAX_NAME];
         EdsError err = EDS_ERR_OK;
         EdsDataType data_type;
         EdsUInt32 data_size;
 
-        err = EdsGetPropertySize(camera_raii.camera(), prop_id, 0, &data_type, &data_size);
+        err = EdsGetPropertySize(_camera_ref, prop_id, 0, &data_type, &data_size);
         if (err == EDS_ERR_OK) {
-            err = EdsGetPropertyData(camera_raii.camera(), prop_id, 0, data_size, &value);
+            err = EdsGetPropertyData(_camera_ref, prop_id, 0, data_size, &value);
         }
 
         return err == EDS_ERR_OK ? std::string(value) : "";

@@ -22,7 +22,7 @@ namespace edsdk_w {
             ~Camera();
 
             template <typename T>
-            T _retrieve_property(EdsUInt32 prop_id);
+            T _retrieve_property(EdsUInt32 prop_id, bool open_session = true);
 
             struct {
                 //props
@@ -61,7 +61,7 @@ namespace edsdk_w {
     };
 
     template <>
-    std::string EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id);
+    std::string EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id, bool open_session);
 
 } //namespace edsdk_w
 
