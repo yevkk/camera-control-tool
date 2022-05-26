@@ -36,6 +36,7 @@ namespace edsdk_w {
 
             friend EDSDK;
         };
+
     public:
         static EDSDK& get_instance();
 
@@ -50,7 +51,6 @@ namespace edsdk_w {
 
         bool reset_camera();
 
-        std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
         static std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
 
     private:
@@ -60,6 +60,8 @@ namespace edsdk_w {
         Camera *_camera;
     };
 
+    template <>
+    std::string EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id);
 
 } //namespace edsdk_w
 
