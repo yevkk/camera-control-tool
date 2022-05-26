@@ -43,6 +43,8 @@ namespace edsdk_w {
 
         std::optional<std::reference_wrapper<Camera>> get_camera();
 
+        bool reset_camera();
+
         std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
 
     private:

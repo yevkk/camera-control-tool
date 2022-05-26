@@ -473,6 +473,13 @@ namespace edsdk_w {
         }
     }
 
+    bool EDSDK::reset_camera() {
+        delete _camera;
+        _camera = nullptr;
+
+        return true;
+    }
+
     std::string EDSDK::explain_prop_value(std::uint32_t prop_id, std::uint32_t value) {
         switch (prop_id) {
             case kEdsPropID_ImageQuality:
