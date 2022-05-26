@@ -512,7 +512,31 @@ namespace edsdk_w {
 
     }
 
-    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera} {}
+    class EDSDK::Camera::SessionRAII {
+    public:
+        explicit SessionRAII(EdsCameraRef camera) : _camera{camera} {
+            _is_valid = (EdsOpenSession(_camera) == EDS_ERR_OK);
+        }
+
+        ~SessionRAII() {
+            EdsCloseSession(_camera);
+        }
+
+        EdsCameraRef &camera() {
+            return _camera;
+        }
+
+        bool is_valid() {
+            return _is_valid;
+        }
+    private:
+        EdsCameraRef _camera;
+        bool _is_valid;
+    };
+
+    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera} {
+        prop = _retrieve_property<std::uint32_t>(kEdsPropID_BatteryLevel);
+    }
 
     EDSDK::Camera::~Camera()  {
         if (_camera_ref) {

@@ -15,6 +15,8 @@ namespace edsdk_w {
             //get_prop/set_prop
 
         private:
+            class SessionRAII;
+
             explicit Camera(EdsCameraRef camera);
 
             ~Camera();
