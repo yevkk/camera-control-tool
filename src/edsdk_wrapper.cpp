@@ -444,6 +444,29 @@ namespace edsdk_w {
         return res;
     }
 
+    bool EDSDK::set_camera(std::uint8_t index_in_list) {
+        EdsError err = EDS_ERR_OK;
+        EdsCameraListRef cameraList = nullptr;
+        EdsCameraRef camera_ref = nullptr;
+
+        err = EdsGetCameraList(&cameraList);
+
+        if (err == EDS_ERR_OK) {
+            err = EdsGetChildAtIndex(cameraList, 0, &camera_ref);
+            _camera = new Camera(camera_ref);
+        }
+
+        if (cameraList) {
+            EdsRelease(cameraList);
+        }
+
+        return err == EDS_ERR_OK;
+    }
+
+    EDSDK::Camera &EDSDK::get_camera() {
+        return *_camera;
+    }
+
     std::string EDSDK::explain_prop_value(std::uint32_t prop_id, std::uint32_t value) {
         switch (prop_id) {
             case kEdsPropID_ImageQuality:

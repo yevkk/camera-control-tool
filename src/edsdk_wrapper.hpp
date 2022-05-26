@@ -37,9 +37,11 @@ namespace edsdk_w {
 
         std::vector<std::string> get_available_camera_list();
 
-        std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
+        bool set_camera(std::uint8_t index_in_list);
 
-        //set_camera;
+        Camera &get_camera();
+
+        std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
 
     private:
         EDSDK();
