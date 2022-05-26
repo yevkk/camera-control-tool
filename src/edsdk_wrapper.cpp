@@ -396,7 +396,7 @@ namespace edsdk_w {
         return instance;
     }
 
-    EDSDK::EDSDK() {
+    EDSDK::EDSDK() : _camera{nullptr} {
         assert(EdsInitializeSDK() == EDS_ERR_OK && "EDSDK initialization error");
         std::cout << "SDK Initialized" << std::endl; //TODO: remove console debug
     }
@@ -425,7 +425,7 @@ namespace edsdk_w {
         for (std::uint8_t i = 0; i < count; i++) {
             EdsCameraRef camera = nullptr;
             EdsDeviceInfo devInfo;
-            err = EdsGetChildAtIndex(cameraList, 0, &camera);
+            err = EdsGetChildAtIndex(cameraList, i, &camera);
             if (err == EDS_ERR_OK) {
                 err = EdsGetDeviceInfo(camera, &devInfo);
                 if (err == EDS_ERR_OK) {
@@ -452,8 +452,10 @@ namespace edsdk_w {
         err = EdsGetCameraList(&cameraList);
 
         if (err == EDS_ERR_OK) {
-            err = EdsGetChildAtIndex(cameraList, 0, &camera_ref);
-            _camera = new Camera(camera_ref);
+            err = EdsGetChildAtIndex(cameraList, index_in_list, &camera_ref);
+            if (err == EDS_ERR_OK) {
+                _camera = new Camera(camera_ref);
+            }
         }
 
         if (cameraList) {
