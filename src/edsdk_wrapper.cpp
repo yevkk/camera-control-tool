@@ -406,6 +406,44 @@ namespace edsdk_w {
         std::cout << "SDK terminated" << std::endl; //TODO: remove console debug
     }
 
+    std::vector<std::string> EDSDK::get_available_camera_list() {
+        std::vector<std::string> res;
+        EdsError err = EDS_ERR_OK;
+        EdsCameraListRef cameraList = nullptr;
+        EdsUInt32 count = 0;
+
+        err = EdsGetCameraList(&cameraList);
+
+        if (err == EDS_ERR_OK) {
+            err = EdsGetChildCount(cameraList, &count);
+            if (count == 0) {
+                err = EDS_ERR_DEVICE_NOT_FOUND;
+                return {};
+            }
+        }
+
+        for (std::uint8_t i = 0; i < count; i++) {
+            EdsCameraRef camera = nullptr;
+            EdsDeviceInfo devInfo;
+            err = EdsGetChildAtIndex(cameraList, 0, &camera);
+            if (err == EDS_ERR_OK) {
+                err = EdsGetDeviceInfo(camera, &devInfo);
+                if (err == EDS_ERR_OK) {
+                    res.emplace_back(devInfo.szDeviceDescription);
+                }
+            }
+            if (camera) {
+                EdsRelease(camera);
+            }
+        }
+
+        if (cameraList) {
+            EdsRelease(cameraList);
+        }
+
+        return res;
+    }
+
     std::string EDSDK::explain_prop_value(std::uint32_t prop_id, std::uint32_t value) {
         switch (prop_id) {
             case kEdsPropID_ImageQuality:

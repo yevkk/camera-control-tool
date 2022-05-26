@@ -2,6 +2,7 @@
 #define EDSDK_WRAPPER_HPP
 
 #include <string>
+#include <vector>
 
 namespace edsdk_w {
     class EDSDK {
@@ -10,6 +11,8 @@ namespace edsdk_w {
 
         EDSDK(EDSDK const&) = delete;
         void operator=(EDSDK &) = delete;
+
+        std::vector<std::string> get_available_camera_list();
 
         std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
     private:
