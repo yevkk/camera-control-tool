@@ -534,7 +534,27 @@ namespace edsdk_w {
         bool _is_valid;
     };
 
-    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera} {}
+    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera} {
+        _properties.name = _retrieve_property<std::string>(kEdsPropID_ProductName);
+        _properties.current_storage = _retrieve_property<std::string>(kEdsPropID_CurrentStorage);
+        _properties.body_id = _retrieve_property<std::string>(kEdsPropID_BodyIDEx);
+        _properties.firmware_version = _retrieve_property<std::string>(kEdsPropID_FirmwareVersion);
+
+        _properties.image_quality = _retrieve_property<std::uint32_t>(kEdsPropID_ImageQuality);
+        _properties.ae_mode = _retrieve_property<std::uint32_t>(kEdsPropID_AEMode);
+        _properties.af_mode = _retrieve_property<std::uint32_t>(kEdsPropID_AFMode);
+        _properties.lens_name = _retrieve_property<std::string>(kEdsPropID_LensName);
+
+        _properties.white_balance = _retrieve_property<std::int32_t>(kEdsPropID_WhiteBalance);
+        _properties.color_temperature = _retrieve_property<std::uint32_t>(kEdsPropID_ColorTemperature);
+        _properties.color_space = _retrieve_property<std::uint32_t>(kEdsPropID_ColorSpace);
+        _properties.drive_mode = _retrieve_property<std::uint32_t>(kEdsPropID_DriveMode);
+        _properties.metering_mode = _retrieve_property<std::uint32_t>(kEdsPropID_MeteringMode);
+        _properties.iso = _retrieve_property<std::uint32_t>(kEdsPropID_ISOSpeed);
+        _properties.av = _retrieve_property<std::uint32_t>(kEdsPropID_Av);
+        _properties.tv = _retrieve_property<std::uint32_t>(kEdsPropID_Tv);
+        _properties.exposure_compensation = _retrieve_property<std::uint32_t>(kEdsPropID_ExposureCompensation);
+    }
 
     EDSDK::Camera::~Camera()  {
         if (_camera_ref) {

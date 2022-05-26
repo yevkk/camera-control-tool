@@ -25,12 +25,33 @@ namespace edsdk_w {
             T _retrieve_property(EdsUInt32 prop_id, bool open_session = true);
 
             struct {
-                //props
-            } properties;
+                //immutable
+                std::string name;
+                std::string current_storage;
+                std::string body_id;
+                std::string firmware_version;
+
+                //read-only
+                std::uint32_t image_quality;
+                std::uint32_t ae_mode;
+                std::uint32_t af_mode;
+                std::string lens_name;
+
+                //settable
+                std::int32_t white_balance;
+                std::uint32_t color_temperature;
+                std::uint32_t color_space;
+                std::uint32_t drive_mode;
+                std::uint32_t metering_mode;
+                std::uint32_t iso;
+                std::uint32_t av;
+                std::uint32_t tv;
+                std::uint32_t exposure_compensation;
+            } _properties;
 
             struct {
                 //props_available_values
-            } properties_constraints;
+            } _properties_constraints;
 
             EdsCameraRef _camera_ref;
 
