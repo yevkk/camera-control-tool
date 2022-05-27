@@ -512,6 +512,16 @@ namespace edsdk_w {
 
     }
 
+    std::vector<std::string> EDSDK::explain_prop_value(std::uint32_t prop_id, const std::vector<std::uint32_t> &value) {
+        std::vector<std::string> res{};
+
+        for (const auto &element : value) {
+            res.push_back(EDSDK::explain_prop_value(prop_id, element));
+        }
+
+        return res;
+    }
+
     class EDSDK::Camera::SessionRAII {
     public:
         explicit SessionRAII(EdsCameraRef camera) : _camera{camera} {
@@ -642,6 +652,42 @@ namespace edsdk_w {
         return EDSDK::explain_prop_value(kEdsPropID_ExposureCompensation, _properties.exposure_compensation);
     }
 
+    std::vector<std::string> EDSDK::Camera::get_white_balance_constraints() {
+        return EDSDK::explain_prop_value(kEdsPropID_WhiteBalance, _properties_constraints.white_balance);
+    }
+
+    std::vector<std::string> EDSDK::Camera::get_color_temperature_constraints() {
+        return EDSDK::explain_prop_value(kEdsPropID_ColorTemperature, _properties_constraints.color_temperature);
+    }
+
+    std::vector<std::string> EDSDK::Camera::get_color_space_constraints() {
+        return EDSDK::explain_prop_value(kEdsPropID_ColorSpace, _properties_constraints.color_space);
+    }
+
+    std::vector<std::string> EDSDK::Camera::get_drive_mode_constraints() {
+        return EDSDK::explain_prop_value(kEdsPropID_DriveMode, _properties_constraints.drive_mode);
+    }
+
+    std::vector<std::string> EDSDK::Camera::get_metering_mode_constraints() {
+        return EDSDK::explain_prop_value(kEdsPropID_MeteringMode, _properties_constraints.metering_mode);
+    }
+
+    std::vector<std::string> EDSDK::Camera::get_iso_constraints() {
+        return EDSDK::explain_prop_value(kEdsPropID_ISOSpeed, _properties_constraints.iso);
+    }
+
+    std::vector<std::string> EDSDK::Camera::get_av_constraints() {
+        return EDSDK::explain_prop_value(kEdsPropID_Av, _properties_constraints.av);
+    }
+
+    std::vector<std::string> EDSDK::Camera::get_tv_constraints() {
+        return EDSDK::explain_prop_value(kEdsPropID_Tv, _properties_constraints.tv);
+    }
+
+    std::vector<std::string> EDSDK::Camera::get_exposure_compensation_constraints() {
+        return EDSDK::explain_prop_value(kEdsPropID_ExposureCompensation, _properties_constraints.exposure_compensation);
+    }
+
     template <typename T>
     T EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id, bool open_session) {
         if (open_session) {
@@ -692,7 +738,7 @@ namespace edsdk_w {
         EdsPropertyDesc desc;
         std::vector<std::uint32_t> res{};
 
-        err = EdsGetPropertyDesc(_camera_ref, kEdsPropID_Tv, &desc);
+        err = EdsGetPropertyDesc(_camera_ref, prop_id, &desc);
         if (err == EDS_ERR_OK) {
             for (std::uint32_t i = 0; i < desc.numElements; i++) {
                 res.push_back(desc.propDesc[i]);
@@ -701,6 +747,7 @@ namespace edsdk_w {
 
         return res;
     }
+
 
 } //namespace edsdk_w
 

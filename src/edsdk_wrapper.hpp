@@ -32,6 +32,16 @@ namespace edsdk_w {
             std::string get_tv();
             std::string get_exposure_compensation();
 
+            std::vector<std::string> get_white_balance_constraints();
+            std::vector<std::string> get_color_temperature_constraints();
+            std::vector<std::string> get_color_space_constraints();
+            std::vector<std::string> get_drive_mode_constraints();
+            std::vector<std::string> get_metering_mode_constraints();
+            std::vector<std::string> get_iso_constraints();
+            std::vector<std::string> get_av_constraints();
+            std::vector<std::string> get_tv_constraints();
+            std::vector<std::string> get_exposure_compensation_constraints();
+
         private:
             class SessionRAII;
 
@@ -101,6 +111,8 @@ namespace edsdk_w {
         bool reset_camera();
 
         static std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
+
+        static std::vector<std::string> explain_prop_value(std::uint32_t prop_id, const std::vector<std::uint32_t> &value);
 
     private:
         EDSDK();
