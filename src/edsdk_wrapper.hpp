@@ -12,35 +12,35 @@ namespace edsdk_w {
     public:
         class Camera {
         public:
-            std::string get_name();
-            std::string get_current_storage();
-            std::string get_body_id();
-            std::string get_firmware_version();
+            [[nodiscard]] std::string get_name() const;
+            [[nodiscard]] std::string get_current_storage() const;
+            [[nodiscard]] std::string get_body_id() const;
+            [[nodiscard]] std::string get_firmware_version() const;
 
-            std::string get_image_quality();
-            std::string get_ae_mode();
-            std::string get_af_mode();
-            std::string get_lens_name();
+            [[nodiscard]] std::string get_image_quality() const;
+            [[nodiscard]] std::string get_ae_mode() const;
+            [[nodiscard]] std::string get_af_mode() const;
+            [[nodiscard]] std::string get_lens_name() const;
 
-            std::string get_white_balance();
-            std::string get_color_temperature();
-            std::string get_color_space();
-            std::string get_drive_mode();
-            std::string get_metering_mode();
-            std::string get_iso();
-            std::string get_av();
-            std::string get_tv();
-            std::string get_exposure_compensation();
+            [[nodiscard]] std::string get_white_balance() const;
+            [[nodiscard]] std::string get_color_temperature() const;
+            [[nodiscard]] std::string get_color_space() const;
+            [[nodiscard]] std::string get_drive_mode() const;
+            [[nodiscard]] std::string get_metering_mode() const;
+            [[nodiscard]] std::string get_iso() const;
+            [[nodiscard]] std::string get_av() const;
+            [[nodiscard]] std::string get_tv() const;
+            [[nodiscard]] std::string get_exposure_compensation() const;
 
-            std::vector<std::string> get_white_balance_constraints();
-            std::vector<std::string> get_color_temperature_constraints();
-            std::vector<std::string> get_color_space_constraints();
-            std::vector<std::string> get_drive_mode_constraints();
-            std::vector<std::string> get_metering_mode_constraints();
-            std::vector<std::string> get_iso_constraints();
-            std::vector<std::string> get_av_constraints();
-            std::vector<std::string> get_tv_constraints();
-            std::vector<std::string> get_exposure_compensation_constraints();
+            [[nodiscard]] std::vector<std::string> get_white_balance_constraints() const;
+            [[nodiscard]] std::vector<std::string> get_color_temperature_constraints() const;
+            [[nodiscard]] std::vector<std::string> get_color_space_constraints() const;
+            [[nodiscard]] std::vector<std::string> get_drive_mode_constraints() const;
+            [[nodiscard]] std::vector<std::string> get_metering_mode_constraints() const;
+            [[nodiscard]] std::vector<std::string> get_iso_constraints() const;
+            [[nodiscard]] std::vector<std::string> get_av_constraints() const;
+            [[nodiscard]] std::vector<std::string> get_tv_constraints() const;
+            [[nodiscard]] std::vector<std::string> get_exposure_compensation_constraints() const;
 
         private:
             class SessionRAII;
