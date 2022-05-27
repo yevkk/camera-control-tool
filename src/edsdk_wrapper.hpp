@@ -68,7 +68,15 @@ namespace edsdk_w {
             } _properties;
 
             struct {
-                //props_available_values
+                std::vector<std::int32_t> white_balance;
+                std::vector<std::uint32_t> color_temperature;
+                std::vector<std::uint32_t> color_space;
+                std::vector<std::uint32_t> drive_mode;
+                std::vector<std::uint32_t> metering_mode;
+                std::vector<std::uint32_t> iso;
+                std::vector<std::uint32_t> av;
+                std::vector<std::uint32_t> tv;
+                std::vector<std::uint32_t> exposure_compensation;
             } _properties_constraints;
 
             EdsCameraRef _camera_ref;
