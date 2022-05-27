@@ -529,7 +529,9 @@ namespace edsdk_w {
         }
 
         ~SessionRAII() {
-            EdsCloseSession(_camera);
+            if (_is_valid) {
+                EdsCloseSession(_camera);
+            }
         }
 
         EdsCameraRef &camera() {
@@ -690,10 +692,8 @@ namespace edsdk_w {
 
     template <typename T>
     T EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id, bool open_session) {
-        if (open_session) {
-            SessionRAII camera_raii{_camera_ref};
-            if (!camera_raii.is_valid()) return T{};
-        }
+        SessionRAII camera_raii{_camera_ref};
+        if (!camera_raii.is_valid() && open_session) return T{};
 
         T value;
         EdsError err = EDS_ERR_OK;
@@ -710,10 +710,8 @@ namespace edsdk_w {
 
     template <>
     std::string EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id, bool open_session) {
-        if (open_session) {
-            SessionRAII camera_raii{_camera_ref};
-            if (!camera_raii.is_valid()) return "";
-        }
+        SessionRAII camera_raii{_camera_ref};
+        if (!camera_raii.is_valid() && open_session) return "";
 
         char value[EDS_MAX_NAME];
         EdsError err = EDS_ERR_OK;
@@ -729,10 +727,9 @@ namespace edsdk_w {
     }
 
     std::vector<std::uint32_t> EDSDK::Camera::_retrieve_property_constraints(EdsUInt32 prop_id, bool open_session) {
-        if (open_session) {
-            SessionRAII camera_raii{_camera_ref};
-            if (!camera_raii.is_valid()) return {};
-        }
+        SessionRAII camera_raii{_camera_ref};
+        if (!camera_raii.is_valid() && open_session) return {};
+
 
         EdsError err = EDS_ERR_OK;
         EdsPropertyDesc desc;
