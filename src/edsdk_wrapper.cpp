@@ -556,6 +556,16 @@ namespace edsdk_w {
         _properties.av = _retrieve_property<std::uint32_t>(kEdsPropID_Av, false);
         _properties.tv = _retrieve_property<std::uint32_t>(kEdsPropID_Tv, false);
         _properties.exposure_compensation = _retrieve_property<std::uint32_t>(kEdsPropID_ExposureCompensation, false);
+
+        _properties_constraints.white_balance = _retrieve_property_constraints(kEdsPropID_WhiteBalance, false);
+        _properties_constraints.color_temperature = _retrieve_property_constraints(kEdsPropID_ColorTemperature, false);
+        _properties_constraints.color_space = _retrieve_property_constraints(kEdsPropID_ColorSpace, false);
+        _properties_constraints.drive_mode = _retrieve_property_constraints(kEdsPropID_DriveMode, false);
+        _properties_constraints.metering_mode = _retrieve_property_constraints(kEdsPropID_MeteringMode, false);
+        _properties_constraints.iso = _retrieve_property_constraints(kEdsPropID_ISOSpeed, false);
+        _properties_constraints.av = _retrieve_property_constraints(kEdsPropID_Av, false);
+        _properties_constraints.tv = _retrieve_property_constraints(kEdsPropID_Tv, false);
+        _properties_constraints.exposure_compensation = _retrieve_property_constraints(kEdsPropID_ExposureCompensation, false);
     }
 
     EDSDK::Camera::~Camera()  {
@@ -670,6 +680,26 @@ namespace edsdk_w {
         }
 
         return err == EDS_ERR_OK ? std::string(value) : "";
+    }
+
+    std::vector<std::uint32_t> EDSDK::Camera::_retrieve_property_constraints(EdsUInt32 prop_id, bool open_session) {
+        if (open_session) {
+            SessionRAII camera_raii{_camera_ref};
+            if (!camera_raii.is_valid()) return {};
+        }
+
+        EdsError err = EDS_ERR_OK;
+        EdsPropertyDesc desc;
+        std::vector<std::uint32_t> res{};
+
+        err = EdsGetPropertyDesc(_camera_ref, kEdsPropID_Tv, &desc);
+        if (err == EDS_ERR_OK) {
+            for (std::uint32_t i = 0; i < desc.numElements; i++) {
+                res.push_back(desc.propDesc[i]);
+            }
+        }
+
+        return res;
     }
 
 } //namespace edsdk_w

@@ -42,6 +42,8 @@ namespace edsdk_w {
             template <typename T>
             T _retrieve_property(EdsUInt32 prop_id, bool open_session = true);
 
+            std::vector<std::uint32_t> _retrieve_property_constraints(EdsUInt32 prop_id, bool open_session = true);
+
             struct {
                 //immutable
                 std::string name;
@@ -68,7 +70,7 @@ namespace edsdk_w {
             } _properties;
 
             struct {
-                std::vector<std::int32_t> white_balance;
+                std::vector<std::uint32_t> white_balance;
                 std::vector<std::uint32_t> color_temperature;
                 std::vector<std::uint32_t> color_space;
                 std::vector<std::uint32_t> drive_mode;
