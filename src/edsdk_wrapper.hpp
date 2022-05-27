@@ -42,6 +42,16 @@ namespace edsdk_w {
             [[nodiscard]] std::vector<std::string> get_tv_constraints() const;
             [[nodiscard]] std::vector<std::string> get_exposure_compensation_constraints() const;
 
+            bool set_white_balance(std::uint32_t index_in_constraints, bool open_session = true);
+            bool set_color_temperature(std::uint32_t index_in_constraints, bool open_session = true);
+            bool set_color_space(std::uint32_t index_in_constraints, bool open_session = true);
+            bool set_drive_mode(std::uint32_t index_in_constraints, bool open_session = true);
+            bool set_metering_mode(std::uint32_t index_in_constraints, bool open_session = true);
+            bool set_iso(std::uint32_t index_in_constraints, bool open_session = true);
+            bool set_av(std::uint32_t index_in_constraints, bool open_session = true);
+            bool set_tv(std::uint32_t index_in_constraints, bool open_session = true);
+            bool set_exposure_compensation(std::uint32_t index_in_constraints, bool open_session = true);
+
         private:
             class SessionRAII;
 
@@ -53,6 +63,12 @@ namespace edsdk_w {
             T _retrieve_property(EdsUInt32 prop_id, bool open_session = true);
 
             std::vector<std::uint32_t> _retrieve_property_constraints(EdsUInt32 prop_id, bool open_session = true);
+
+            bool _set_property(EdsUInt32 prop_id,
+                               std::uint32_t *prop_ptr,
+                               const std::vector<std::uint32_t> &constraints,
+                               std::uint32_t value_index,
+                               bool open_session = true);
 
             struct {
                 //immutable
@@ -68,7 +84,7 @@ namespace edsdk_w {
                 std::string lens_name;
 
                 //settable
-                std::int32_t white_balance;
+                std::uint32_t white_balance;
                 std::uint32_t color_temperature;
                 std::uint32_t color_space;
                 std::uint32_t drive_mode;
