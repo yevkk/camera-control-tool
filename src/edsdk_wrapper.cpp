@@ -547,7 +547,7 @@ namespace edsdk_w {
         bool _is_valid;
     };
 
-    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera} {
+    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false} {
         SessionRAII camera_raii{_camera_ref};
 
         _properties.name = _retrieve_property<std::string>(kEdsPropID_ProductName, false);
@@ -617,7 +617,13 @@ namespace edsdk_w {
                               0) == EDS_ERR_OK;
     }
 
-    bool EDSDK
+    bool EDSDK::Camera::open_session() {
+        return !_explicit_session_opened && (EdsOpenSession(_camera_ref) == EDS_ERR_OK);
+    }
+
+    bool EDSDK::Camera::close_session() {
+        return _explicit_session_opened && (EdsCloseSession(_camera_ref) == EDS_ERR_OK);
+    }
 
     std::string EDSDK::Camera::get_name() const {
         return _properties.name;

@@ -19,6 +19,9 @@ namespace edsdk_w {
 
             bool update_shutdown_timer();
 
+            bool open_session();
+            bool close_session();
+
             [[nodiscard]] std::string get_name() const;
             [[nodiscard]] std::string get_current_storage() const;
             [[nodiscard]] std::string get_body_id() const;
@@ -117,6 +120,7 @@ namespace edsdk_w {
             } _properties_constraints;
 
             EdsCameraRef _camera_ref;
+            bool _explicit_session_opened;
 
             friend EDSDK;
         };
