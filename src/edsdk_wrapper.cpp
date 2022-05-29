@@ -402,6 +402,7 @@ namespace edsdk_w {
     }
 
     EDSDK::~EDSDK() {
+        reset_camera();
         assert(EdsTerminateSDK() == EDS_ERR_OK && "EDSDK termination error");
         std::cout << "SDK terminated" << std::endl; //TODO: remove console debug
     }
@@ -538,7 +539,7 @@ namespace edsdk_w {
             return _camera;
         }
 
-        bool is_valid() {
+        bool is_valid() const {
             return _is_valid;
         }
     private:
@@ -546,7 +547,7 @@ namespace edsdk_w {
         bool _is_valid;
     };
 
-    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera} {
+    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false} {
         SessionRAII camera_raii{_camera_ref};
 
         _properties.name = _retrieve_property<std::string>(kEdsPropID_ProductName, false);
@@ -584,6 +585,44 @@ namespace edsdk_w {
         if (_camera_ref) {
             EdsRelease(_camera_ref);
         }
+    }
+
+    bool EDSDK::Camera::shutter_button() {
+        SessionRAII _{_camera_ref};
+        return shutter_button_press() && shutter_button_release();
+    }
+
+    bool EDSDK::Camera::shutter_button_press() {
+        EdsOpenSession(_camera_ref);
+        return _shutter_button_command(kEdsCameraCommand_ShutterButton_Completely);
+    }
+
+    bool EDSDK::Camera::shutter_button_press_halfway() {
+        EdsOpenSession(_camera_ref);
+        return _shutter_button_command(kEdsCameraCommand_ShutterButton_Halfway);
+    }
+
+    bool EDSDK::Camera::shutter_button_release(bool close_session) {
+        auto res = _shutter_button_command(kEdsCameraCommand_ShutterButton_OFF);
+        if (close_session) {
+            EdsCloseSession(_camera_ref);
+        }
+        return res;
+    }
+
+    bool EDSDK::Camera::update_shutdown_timer() {
+        SessionRAII raii{_camera_ref};
+        return EdsSendCommand(_camera_ref,
+                              kEdsCameraCommand_ExtendShutDownTimer,
+                              0) == EDS_ERR_OK;
+    }
+
+    bool EDSDK::Camera::open_session() {
+        return !_explicit_session_opened && (EdsOpenSession(_camera_ref) == EDS_ERR_OK);
+    }
+
+    bool EDSDK::Camera::close_session() {
+        return _explicit_session_opened && (EdsCloseSession(_camera_ref) == EDS_ERR_OK);
     }
 
     std::string EDSDK::Camera::get_name() const {
@@ -761,6 +800,13 @@ namespace edsdk_w {
                              _properties_constraints.exposure_compensation,
                              index_in_constraints,
                              open_session);
+    }
+
+    inline bool EDSDK::Camera::_shutter_button_command(EdsInt32 param) {
+        SessionRAII _{_camera_ref};
+        return EdsSendCommand(_camera_ref,
+                              kEdsCameraCommand_PressShutterButton,
+                              param) == EDS_ERR_OK;
     }
 
     template <typename T>
