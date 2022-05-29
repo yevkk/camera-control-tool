@@ -539,7 +539,7 @@ namespace edsdk_w {
             return _camera;
         }
 
-        bool is_valid() {
+        bool is_valid() const {
             return _is_valid;
         }
     private:
@@ -609,6 +609,15 @@ namespace edsdk_w {
         }
         return res;
     }
+
+    bool EDSDK::Camera::update_shutdown_timer() {
+        SessionRAII raii{_camera_ref};
+        return EdsSendCommand(_camera_ref,
+                              kEdsCameraCommand_ExtendShutDownTimer,
+                              0) == EDS_ERR_OK;
+    }
+
+    bool EDSDK
 
     std::string EDSDK::Camera::get_name() const {
         return _properties.name;

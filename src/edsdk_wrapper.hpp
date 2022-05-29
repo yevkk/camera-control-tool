@@ -17,6 +17,8 @@ namespace edsdk_w {
             bool shutter_button_press_halfway();
             bool shutter_button_release(bool close_session = true);
 
+            bool update_shutdown_timer();
+
             [[nodiscard]] std::string get_name() const;
             [[nodiscard]] std::string get_current_storage() const;
             [[nodiscard]] std::string get_body_id() const;
