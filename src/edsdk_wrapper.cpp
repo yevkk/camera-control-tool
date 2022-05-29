@@ -402,6 +402,7 @@ namespace edsdk_w {
     }
 
     EDSDK::~EDSDK() {
+        reset_camera();
         assert(EdsTerminateSDK() == EDS_ERR_OK && "EDSDK termination error");
         std::cout << "SDK terminated" << std::endl; //TODO: remove console debug
     }
