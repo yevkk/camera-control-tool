@@ -12,6 +12,11 @@ namespace edsdk_w {
     public:
         class Camera {
         public:
+            bool shutter_button();
+            bool shutter_button_press();
+            bool shutter_button_press_halfway();
+            bool shutter_button_release(bool close_session = true);
+
             [[nodiscard]] std::string get_name() const;
             [[nodiscard]] std::string get_current_storage() const;
             [[nodiscard]] std::string get_body_id() const;
@@ -58,6 +63,8 @@ namespace edsdk_w {
             explicit Camera(EdsCameraRef camera);
 
             ~Camera();
+
+            inline bool _shutter_button_command(EdsInt32 param);
 
             template <typename T>
             T _retrieve_property(EdsUInt32 prop_id, bool open_session = true);

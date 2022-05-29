@@ -586,6 +586,29 @@ namespace edsdk_w {
         }
     }
 
+    bool EDSDK::Camera::shutter_button() {
+        SessionRAII _{_camera_ref};
+        return shutter_button_press() && shutter_button_release();
+    }
+
+    bool EDSDK::Camera::shutter_button_press() {
+        EdsOpenSession(_camera_ref);
+        return _shutter_button_command(kEdsCameraCommand_ShutterButton_Completely);
+    }
+
+    bool EDSDK::Camera::shutter_button_press_halfway() {
+        EdsOpenSession(_camera_ref);
+        return _shutter_button_command(kEdsCameraCommand_ShutterButton_Halfway);
+    }
+
+    bool EDSDK::Camera::shutter_button_release(bool close_session) {
+        auto res = _shutter_button_command(kEdsCameraCommand_ShutterButton_OFF);
+        if (close_session) {
+            EdsCloseSession(_camera_ref);
+        }
+        return res;
+    }
+
     std::string EDSDK::Camera::get_name() const {
         return _properties.name;
     }
@@ -761,6 +784,13 @@ namespace edsdk_w {
                              _properties_constraints.exposure_compensation,
                              index_in_constraints,
                              open_session);
+    }
+
+    inline bool EDSDK::Camera::_shutter_button_command(EdsInt32 param) {
+        SessionRAII _{_camera_ref};
+        return EdsSendCommand(_camera_ref,
+                              kEdsCameraCommand_PressShutterButton,
+                              param) == EDS_ERR_OK;
     }
 
     template <typename T>
