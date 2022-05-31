@@ -523,6 +523,71 @@ namespace edsdk_w {
         return res;
     }
 
+    class EDSDK::Camera::Command {
+    public:
+        virtual void dispatch(EDSDK::Camera*) = 0;
+    };
+
+    class EDSDK::Camera::CommandRetrieveProperty : public Command {
+    public:
+        CommandRetrieveProperty(EdsPropertyID prop_id) : Command{}, _prop_id{prop_id} {}
+
+        void dispatch(EDSDK::Camera* camera) override {
+            //TODO: implement this;
+        }
+    private:
+        EdsPropertyID _prop_id;
+    };
+
+    class EDSDK::Camera::CommandSetProperty : public Command {
+    public:
+        CommandSetProperty(EdsPropertyID prop_id, EdsUInt32 value) : Command{}, _prop_id{prop_id}, _value{value} {}
+
+        void dispatch(EDSDK::Camera* camera) override {
+            //TODO: implement this;
+        }
+    private:
+        EdsPropertyID _prop_id;
+        EdsUInt32 _value;
+    };
+
+    class EDSDK::Camera::CommandSetState : public Command {
+    public:
+        CommandSetState(EdsCameraStatusCommand command) : Command{}, _command{command} {}
+
+        void dispatch(EDSDK::Camera* camera) override {
+            //TODO: implement this;
+        }
+    private:
+        EdsCameraStatusCommand _command;
+    };
+
+    class EDSDK::Camera::CommandShutterControl : public Command {
+    public:
+        enum class Action {RELEASE, PRESS_FULL, PRESS_HALFWAY, PRESS_AND_RELEASE};
+
+        CommandShutterControl(Action action) : Command{}, _action{action} {}
+
+        void dispatch(EDSDK::Camera* camera) override {
+            //TODO: implement this;
+        }
+    private:
+        Action _action;
+    };
+
+    class EDSDK::Camera::CommandSessionControl : public Command {
+    public:
+        enum class Action {OPEN, CLOSE};
+
+        CommandSessionControl(Action action) : Command{}, _action{action} {}
+
+        void dispatch(EDSDK::Camera* camera) override {
+            //TODO: implement this;
+        }
+    private:
+        Action _action;
+    };
+
     EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false} {
         open_session();
 

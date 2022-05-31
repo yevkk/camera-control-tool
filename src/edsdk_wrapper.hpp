@@ -11,6 +11,13 @@ namespace edsdk_w {
     class EDSDK {
     public:
         class Camera {
+        private:
+            class Command;
+            class CommandRetrieveProperty;
+            class CommandSetProperty;
+            class CommandSetState;
+            class CommandShutterControl;
+            class CommandSessionControl;
         public:
             bool shutter_button();
             bool shutter_button_press();
