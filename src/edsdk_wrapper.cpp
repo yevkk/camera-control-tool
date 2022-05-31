@@ -578,12 +578,8 @@ namespace edsdk_w {
         return _shutter_button_command(kEdsCameraCommand_ShutterButton_Halfway);
     }
 
-    bool EDSDK::Camera::shutter_button_release(bool close_session) {
-        auto res = _shutter_button_command(kEdsCameraCommand_ShutterButton_OFF);
-        if (close_session) {
-            EdsCloseSession(_camera_ref);
-        }
-        return res;
+    bool EDSDK::Camera::shutter_button_release() {
+        return _shutter_button_command(kEdsCameraCommand_ShutterButton_OFF);
     }
 
     bool EDSDK::Camera::update_shutdown_timer() {

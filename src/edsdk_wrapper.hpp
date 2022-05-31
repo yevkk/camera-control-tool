@@ -15,7 +15,7 @@ namespace edsdk_w {
             bool shutter_button();
             bool shutter_button_press();
             bool shutter_button_press_halfway();
-            bool shutter_button_release(bool close_session = true);
+            bool shutter_button_release();
 
             bool update_shutdown_timer();
 
