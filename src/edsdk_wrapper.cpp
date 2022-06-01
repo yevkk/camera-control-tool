@@ -5,10 +5,53 @@
 #include <EDSDKTypes.h>
 
 #include <cassert>
+#include <queue>
+#include <mutex>
 #include <iostream>
 
 namespace edsdk_w {
     namespace utils {
+        template<typename T>
+        class Queue {
+        public:
+            Queue() = default;
+            Queue(const Queue<T> &) = delete ;
+            Queue& operator=(const Queue<T> &) = delete ;
+
+            Queue(Queue<T>&& other)  noexcept {
+                _queue = std::move(other._queue);
+            }
+
+            [[nodiscard]] bool empty() const {
+                std::lock_guard _{_mutex};
+                return _queue.empty();
+            }
+
+            [[nodiscard]] std::uint32_t size() const {
+                std::lock_guard _{_mutex};
+                return _queue.size();
+            }
+
+            std::optional<T> pop() {
+                std::lock_guard _{_mutex};
+                if (_queue.empty()) {
+                    return {};
+                }
+                T tmp = _queue.front();
+                _queue.pop();
+                return tmp;
+            }
+
+            void push(const T &item) {
+                std::lock_guard _{_mutex};
+                _queue.push(item);
+            }
+
+        private:
+            std::queue<T> _queue;
+            std::mutex _mutex;
+        };
+
         std::string explain_prop_value_image_quality(std::uint32_t value) {
             auto image_type = [](std::uint8_t v) {
                 switch (v) {

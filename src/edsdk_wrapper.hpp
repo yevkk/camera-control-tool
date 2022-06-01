@@ -8,6 +8,11 @@
 #include "EDSDKTypes.h"
 
 namespace edsdk_w {
+    namespace utils {
+        template <typename T>
+        class Queue;
+    } //namespace utils
+
     class EDSDK {
     public:
         class Camera {
