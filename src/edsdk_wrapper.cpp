@@ -568,25 +568,14 @@ namespace edsdk_w {
 
     class EDSDK::Camera::Command {
     public:
-        virtual void dispatch(EDSDK::Camera*) = 0;
-    };
-
-    class EDSDK::Camera::CommandRetrieveProperty : public Command {
-    public:
-        CommandRetrieveProperty(EdsPropertyID prop_id) : Command{}, _prop_id{prop_id} {}
-
-        void dispatch(EDSDK::Camera* camera) override {
-            //TODO: implement this;
-        }
-    private:
-        EdsPropertyID _prop_id;
+        virtual bool dispatch(EDSDK::Camera*) = 0;
     };
 
     class EDSDK::Camera::CommandSetProperty : public Command {
     public:
         CommandSetProperty(EdsPropertyID prop_id, EdsUInt32 value) : Command{}, _prop_id{prop_id}, _value{value} {}
 
-        void dispatch(EDSDK::Camera* camera) override {
+        bool dispatch(EDSDK::Camera* camera) override {
             //TODO: implement this;
         }
     private:
@@ -598,8 +587,8 @@ namespace edsdk_w {
     public:
         CommandSetState(EdsCameraStatusCommand command) : Command{}, _command{command} {}
 
-        void dispatch(EDSDK::Camera* camera) override {
-            //TODO: implement this;
+        bool dispatch(EDSDK::Camera* camera) override {
+            return EdsSendStatusCommand(camera->_camera_ref, _command, 0) == EDS_ERR_OK;
         }
     private:
         EdsCameraStatusCommand _command;
@@ -611,8 +600,8 @@ namespace edsdk_w {
 
         CommandShutterControl(Action action) : Command{}, _action{action} {}
 
-        void dispatch(EDSDK::Camera* camera) override {
             //TODO: implement this;
+        bool dispatch(EDSDK::Camera* camera) override {
         }
     private:
         Action _action;
@@ -624,10 +613,33 @@ namespace edsdk_w {
 
         CommandSessionControl(Action action) : Command{}, _action{action} {}
 
-        void dispatch(EDSDK::Camera* camera) override {
-            //TODO: implement this;
+        bool dispatch(EDSDK::Camera* camera) override {
+            switch (_action) {
+                case Action::OPEN:
+                    return _open_session(camera);
+                case Action::CLOSE:
+                    return _close_session(camera);
+            }
         }
     private:
+        static bool _open_session(EDSDK::Camera* camera) {
+            if (camera->_explicit_session_opened) {
+                return false;
+            }
+
+            camera->_explicit_session_opened = (EdsOpenSession(camera->_camera_ref) == EDS_ERR_OK);
+            return camera->_explicit_session_opened;
+        }
+
+        static bool _close_session(EDSDK::Camera* camera) {
+            if (!camera->_explicit_session_opened) {
+                return false;
+            }
+
+            camera->_explicit_session_opened = (EdsCloseSession(camera->_camera_ref) != EDS_ERR_OK);
+            return !camera->_explicit_session_opened;
+        }
+
         Action _action;
     };
 
@@ -696,22 +708,12 @@ namespace edsdk_w {
                               0) == EDS_ERR_OK;
     }
 
-    bool EDSDK::Camera::open_session() {
-        if (_explicit_session_opened) {
-            return false;
-        }
+    void EDSDK::Camera::open_session() {
 
-        _explicit_session_opened = (EdsOpenSession(_camera_ref) == EDS_ERR_OK);
-        return _explicit_session_opened;
     }
 
-    bool EDSDK::Camera::close_session() {
-        if (!_explicit_session_opened) {
-            return false;
-        }
+    void EDSDK::Camera::close_session() {
 
-        _explicit_session_opened = (EdsCloseSession(_camera_ref) != EDS_ERR_OK);
-        return !_explicit_session_opened;
     }
 
     std::string EDSDK::Camera::get_name() {

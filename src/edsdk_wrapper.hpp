@@ -20,7 +20,6 @@ namespace edsdk_w {
         class Camera {
         private:
             class Command;
-            class CommandRetrieveProperty;
             class CommandSetProperty;
             class CommandSetState;
             class CommandShutterControl;
@@ -33,8 +32,8 @@ namespace edsdk_w {
 
             bool update_shutdown_timer();
 
-            bool open_session();
-            bool close_session();
+            void open_session();
+            void close_session();
 
             [[nodiscard]] std::string get_name();
             [[nodiscard]] std::string get_current_storage();
