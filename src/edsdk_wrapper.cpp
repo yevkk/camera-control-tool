@@ -679,12 +679,10 @@ namespace edsdk_w {
     }
 
     bool EDSDK::Camera::shutter_button_press() {
-        EdsOpenSession(_camera_ref);
         return _shutter_button_command(kEdsCameraCommand_ShutterButton_Completely);
     }
 
     bool EDSDK::Camera::shutter_button_press_halfway() {
-        EdsOpenSession(_camera_ref);
         return _shutter_button_command(kEdsCameraCommand_ShutterButton_Halfway);
     }
 
