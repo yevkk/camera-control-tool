@@ -5,6 +5,8 @@
 #include <vector>
 #include <optional>
 #include <functional>
+#include <atomic>
+#include <mutex>
 #include "EDSDKTypes.h"
 
 namespace edsdk_w {
@@ -34,35 +36,35 @@ namespace edsdk_w {
             bool open_session();
             bool close_session();
 
-            [[nodiscard]] std::string get_name() const;
-            [[nodiscard]] std::string get_current_storage() const;
-            [[nodiscard]] std::string get_body_id() const;
-            [[nodiscard]] std::string get_firmware_version() const;
+            [[nodiscard]] std::string get_name();
+            [[nodiscard]] std::string get_current_storage();
+            [[nodiscard]] std::string get_body_id();
+            [[nodiscard]] std::string get_firmware_version();
 
-            [[nodiscard]] std::string get_image_quality() const;
-            [[nodiscard]] std::string get_ae_mode() const;
-            [[nodiscard]] std::string get_af_mode() const;
-            [[nodiscard]] std::string get_lens_name() const;
+            [[nodiscard]] std::string get_image_quality();
+            [[nodiscard]] std::string get_ae_mode();
+            [[nodiscard]] std::string get_af_mode();
+            [[nodiscard]] std::string get_lens_name();
 
-            [[nodiscard]] std::string get_white_balance() const;
-            [[nodiscard]] std::string get_color_temperature() const;
-            [[nodiscard]] std::string get_color_space() const;
-            [[nodiscard]] std::string get_drive_mode() const;
-            [[nodiscard]] std::string get_metering_mode() const;
-            [[nodiscard]] std::string get_iso() const;
-            [[nodiscard]] std::string get_av() const;
-            [[nodiscard]] std::string get_tv() const;
-            [[nodiscard]] std::string get_exposure_compensation() const;
+            [[nodiscard]] std::string get_white_balance();
+            [[nodiscard]] std::string get_color_temperature();
+            [[nodiscard]] std::string get_color_space();
+            [[nodiscard]] std::string get_drive_mode();
+            [[nodiscard]] std::string get_metering_mode();
+            [[nodiscard]] std::string get_iso();
+            [[nodiscard]] std::string get_av();
+            [[nodiscard]] std::string get_tv();
+            [[nodiscard]] std::string get_exposure_compensation();
 
-            [[nodiscard]] std::vector<std::string> get_white_balance_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_color_temperature_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_color_space_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_drive_mode_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_metering_mode_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_iso_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_av_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_tv_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_exposure_compensation_constraints() const;
+            [[nodiscard]] std::vector<std::string> get_white_balance_constraints();
+            [[nodiscard]] std::vector<std::string> get_color_temperature_constraints();
+            [[nodiscard]] std::vector<std::string> get_color_space_constraints();
+            [[nodiscard]] std::vector<std::string> get_drive_mode_constraints();
+            [[nodiscard]] std::vector<std::string> get_metering_mode_constraints();
+            [[nodiscard]] std::vector<std::string> get_iso_constraints();
+            [[nodiscard]] std::vector<std::string> get_av_constraints();
+            [[nodiscard]] std::vector<std::string> get_tv_constraints();
+            [[nodiscard]] std::vector<std::string> get_exposure_compensation_constraints();
 
             bool set_white_balance(std::uint32_t index_in_constraints);
             bool set_color_temperature(std::uint32_t index_in_constraints);
@@ -114,6 +116,8 @@ namespace edsdk_w {
                 std::uint32_t av;
                 std::uint32_t tv;
                 std::uint32_t exposure_compensation;
+
+                std::mutex mutex;
             } _properties;
 
             struct {
@@ -126,10 +130,12 @@ namespace edsdk_w {
                 std::vector<std::uint32_t> av;
                 std::vector<std::uint32_t> tv;
                 std::vector<std::uint32_t> exposure_compensation;
+
+                std::mutex mutex;
             } _properties_constraints;
 
             EdsCameraRef _camera_ref;
-            bool _explicit_session_opened;
+            std::atomic_bool _explicit_session_opened;
 
             friend EDSDK;
         };

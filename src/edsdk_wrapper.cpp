@@ -634,6 +634,7 @@ namespace edsdk_w {
     EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false} {
         open_session();
 
+        std::lock_guard properties_lock_guard{_properties.mutex};
         _properties.name = _retrieve_property<std::string>(kEdsPropID_ProductName);
         _properties.current_storage = _retrieve_property<std::string>(kEdsPropID_CurrentStorage);
         _properties.body_id = _retrieve_property<std::string>(kEdsPropID_BodyIDEx);
@@ -654,6 +655,7 @@ namespace edsdk_w {
         _properties.tv = _retrieve_property<std::uint32_t>(kEdsPropID_Tv);
         _properties.exposure_compensation = _retrieve_property<std::uint32_t>(kEdsPropID_ExposureCompensation);
 
+        std::lock_guard properties_constraints_lock_guard{_properties_constraints.mutex};
         _properties_constraints.white_balance = _retrieve_property_constraints(kEdsPropID_WhiteBalance);
         _properties_constraints.color_temperature = _retrieve_property_constraints(kEdsPropID_ColorTemperature);
         _properties_constraints.color_space = _retrieve_property_constraints(kEdsPropID_ColorSpace);
@@ -714,107 +716,133 @@ namespace edsdk_w {
         return !_explicit_session_opened;
     }
 
-    std::string EDSDK::Camera::get_name() const {
+    std::string EDSDK::Camera::get_name() {
+        std::lock_guard _{_properties.mutex};
         return _properties.name;
     }
 
-    std::string EDSDK::Camera::get_current_storage() const {
+    std::string EDSDK::Camera::get_current_storage() {
+        std::lock_guard _{_properties.mutex};
         return _properties.current_storage;
     }
 
-    std::string EDSDK::Camera::get_body_id() const {
+    std::string EDSDK::Camera::get_body_id() {
+        std::lock_guard _{_properties.mutex};
         return _properties.body_id;
     }
 
-    std::string EDSDK::Camera::get_firmware_version() const {
+    std::string EDSDK::Camera::get_firmware_version() {
+        std::lock_guard _{_properties.mutex};
         return _properties.firmware_version;
     }
 
-    std::string EDSDK::Camera::get_image_quality() const {
+    std::string EDSDK::Camera::get_image_quality() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ImageQuality, _properties.image_quality);
     }
 
-    std::string EDSDK::Camera::get_ae_mode() const {
+    std::string EDSDK::Camera::get_ae_mode() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_AEMode, _properties.ae_mode);
     }
 
-    std::string EDSDK::Camera::get_af_mode() const {
+    std::string EDSDK::Camera::get_af_mode() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_AFMode, _properties.af_mode);
     }
 
-    std::string EDSDK::Camera::get_lens_name() const {
+    std::string EDSDK::Camera::get_lens_name() {
+        std::lock_guard _{_properties.mutex};
         return _properties.lens_name;
     }
 
-    std::string EDSDK::Camera::get_white_balance() const {
+    std::string EDSDK::Camera::get_white_balance() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_WhiteBalance, _properties.white_balance);
     }
 
-    std::string EDSDK::Camera::get_color_temperature() const {
+    std::string EDSDK::Camera::get_color_temperature() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorTemperature, _properties.color_temperature);
     }
 
-    std::string EDSDK::Camera::get_color_space() const {
+    std::string EDSDK::Camera::get_color_space() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorSpace, _properties.color_space);
     }
 
-    std::string EDSDK::Camera::get_drive_mode() const {
+    std::string EDSDK::Camera::get_drive_mode() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_DriveMode, _properties.drive_mode);
     }
 
-    std::string EDSDK::Camera::get_metering_mode() const {
+    std::string EDSDK::Camera::get_metering_mode() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_MeteringMode, _properties.metering_mode);
     }
 
-    std::string EDSDK::Camera::get_iso() const {
+    std::string EDSDK::Camera::get_iso() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ISOSpeed, _properties.iso);
     }
 
-    std::string EDSDK::Camera::get_av() const {
+    std::string EDSDK::Camera::get_av() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Av, _properties.av);
     }
 
-    std::string EDSDK::Camera::get_tv() const {
+    std::string EDSDK::Camera::get_tv() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Tv, _properties.tv);
     }
 
-    std::string EDSDK::Camera::get_exposure_compensation() const {
+    std::string EDSDK::Camera::get_exposure_compensation() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ExposureCompensation, _properties.exposure_compensation);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_white_balance_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_white_balance_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_WhiteBalance, _properties_constraints.white_balance);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_color_temperature_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_color_temperature_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorTemperature, _properties_constraints.color_temperature);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_color_space_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_color_space_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorSpace, _properties_constraints.color_space);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_drive_mode_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_drive_mode_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_DriveMode, _properties_constraints.drive_mode);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_metering_mode_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_metering_mode_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_MeteringMode, _properties_constraints.metering_mode);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_iso_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_iso_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ISOSpeed, _properties_constraints.iso);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_av_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_av_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Av, _properties_constraints.av);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_tv_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_tv_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Tv, _properties_constraints.tv);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_exposure_compensation_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_exposure_compensation_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ExposureCompensation, _properties_constraints.exposure_compensation);
     }
 
@@ -919,8 +947,6 @@ namespace edsdk_w {
     }
 
     std::vector<std::uint32_t> EDSDK::Camera::_retrieve_property_constraints(EdsUInt32 prop_id) {
-
-
         EdsError err = EDS_ERR_OK;
         EdsPropertyDesc desc;
         std::vector<std::uint32_t> res{};
@@ -947,8 +973,10 @@ namespace edsdk_w {
 
         err = EdsGetPropertySize(_camera_ref, prop_id, 0, &dataType, &dataSize);
         if (err == EDS_ERR_OK) {
+            std::lock_guard _{_properties_constraints.mutex};
             err = EdsSetPropertyData(_camera_ref, prop_id, 0, dataSize, &constraints[value_index]);
             if (err == EDS_ERR_OK) {
+                std::lock_guard _{_properties.mutex};
                 *prop_ptr = constraints[value_index];
             }
         }
