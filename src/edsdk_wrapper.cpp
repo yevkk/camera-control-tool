@@ -5,52 +5,44 @@
 #include <EDSDKTypes.h>
 
 #include <cassert>
-#include <queue>
-#include <mutex>
 #include <iostream>
 
 namespace edsdk_w {
     namespace utils {
         template<typename T>
-        class Queue {
-        public:
-            Queue() = default;
-            Queue(const Queue<T> &) = delete ;
-            Queue& operator=(const Queue<T> &) = delete ;
+        Queue<T>::Queue(Queue<T>&& other)  noexcept {
+            _queue = std::move(other._queue);
+        }
 
-            Queue(Queue<T>&& other)  noexcept {
-                _queue = std::move(other._queue);
+        template<typename T>
+        bool Queue<T>::empty() const {
+            std::lock_guard _{_mutex};
+            return _queue.empty();
+        }
+
+        template<typename T>
+        std::uint32_t Queue<T>::size() const {
+            std::lock_guard _{_mutex};
+            return _queue.size();
+        }
+
+        template<typename T>
+        std::optional<T> Queue<T>::pop() {
+            std::lock_guard _{_mutex};
+            if (_queue.empty()) {
+                return {};
             }
+            T tmp = _queue.front();
+            _queue.pop();
+            return tmp;
+        }
 
-            [[nodiscard]] bool empty() const {
-                std::lock_guard _{_mutex};
-                return _queue.empty();
-            }
+        template<typename T>
+        void Queue<T>::push(const T &item) {
+            std::lock_guard _{_mutex};
+            _queue.push(item);
+        }
 
-            [[nodiscard]] std::uint32_t size() const {
-                std::lock_guard _{_mutex};
-                return _queue.size();
-            }
-
-            std::optional<T> pop() {
-                std::lock_guard _{_mutex};
-                if (_queue.empty()) {
-                    return {};
-                }
-                T tmp = _queue.front();
-                _queue.pop();
-                return tmp;
-            }
-
-            void push(const T &item) {
-                std::lock_guard _{_mutex};
-                _queue.push(item);
-            }
-
-        private:
-            std::queue<T> _queue;
-            std::mutex _mutex;
-        };
 
         std::string explain_prop_value_image_quality(std::uint32_t value) {
             auto image_type = [](std::uint8_t v) {
@@ -643,7 +635,7 @@ namespace edsdk_w {
         Action _action;
     };
 
-    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false} {
+    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false}, _command_queue{} {
         open_session();
 
         std::lock_guard properties_lock_guard{_properties.mutex};

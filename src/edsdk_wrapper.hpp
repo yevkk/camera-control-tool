@@ -5,14 +5,34 @@
 #include <vector>
 #include <optional>
 #include <functional>
+#include <queue>
 #include <atomic>
 #include <mutex>
 #include "EDSDKTypes.h"
 
 namespace edsdk_w {
     namespace utils {
-        template <typename T>
-        class Queue;
+        template<typename T>
+        class Queue {
+        public:
+            Queue() = default;
+            Queue(const Queue<T> &) = delete ;
+            Queue& operator=(const Queue<T> &) = delete ;
+
+            Queue(Queue<T>&& other) noexcept;
+
+            [[nodiscard]] bool empty() const;
+
+            [[nodiscard]] std::uint32_t size() const;
+
+            std::optional<T> pop();
+
+            void push(const T &item);
+
+        private:
+            std::queue<T> _queue;
+            std::mutex _mutex;
+        };
     } //namespace utils
 
     class EDSDK {
@@ -135,6 +155,7 @@ namespace edsdk_w {
 
             EdsCameraRef _camera_ref;
             std::atomic_bool _explicit_session_opened;
+            utils::Queue<Command> _command_queue;
 
             friend EDSDK;
         };
