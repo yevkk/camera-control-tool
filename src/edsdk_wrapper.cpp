@@ -15,13 +15,13 @@ namespace edsdk_w {
         }
 
         template<typename T>
-        bool Queue<T>::empty() const {
+        bool Queue<T>::empty() {
             std::lock_guard _{_mutex};
             return _queue.empty();
         }
 
         template<typename T>
-        std::uint32_t Queue<T>::size() const {
+        std::uint32_t Queue<T>::size() {
             std::lock_guard _{_mutex};
             return _queue.size();
         }
@@ -561,6 +561,8 @@ namespace edsdk_w {
     class EDSDK::Camera::Command {
     public:
         virtual bool dispatch(EDSDK::Camera*) = 0;
+
+        virtual ~Command() = default;
     };
 
     class EDSDK::Camera::CommandSetProperty : public Command {
@@ -965,10 +967,10 @@ namespace edsdk_w {
 
         err = EdsGetPropertySize(_camera_ref, prop_id, 0, &dataType, &dataSize);
         if (err == EDS_ERR_OK) {
-            std::lock_guard _{_properties_constraints.mutex};
+            std::lock_guard properties_constraints_lock_guard{_properties_constraints.mutex};
             err = EdsSetPropertyData(_camera_ref, prop_id, 0, dataSize, &constraints[value_index]);
             if (err == EDS_ERR_OK) {
-                std::lock_guard _{_properties.mutex};
+                std::lock_guard properties_lock_guard{_properties.mutex};
                 *prop_ptr = constraints[value_index];
             }
         }

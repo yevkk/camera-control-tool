@@ -21,9 +21,9 @@ namespace edsdk_w {
 
             Queue(Queue<T>&& other) noexcept;
 
-            [[nodiscard]] bool empty() const;
+            [[nodiscard]] bool empty();
 
-            [[nodiscard]] std::uint32_t size() const;
+            [[nodiscard]] std::uint32_t size();
 
             std::optional<T> pop();
 
@@ -155,7 +155,7 @@ namespace edsdk_w {
 
             EdsCameraRef _camera_ref;
             std::atomic_bool _explicit_session_opened;
-            utils::Queue<Command> _command_queue;
+            utils::Queue<Command*> _command_queue;
 
             friend EDSDK;
         };
