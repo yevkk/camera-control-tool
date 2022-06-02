@@ -16,19 +16,19 @@ namespace edsdk_w {
 
         template<typename T>
         bool Queue<T>::empty() {
-            std::lock_guard _{_mutex};
+            std::scoped_lock _{_mutex};
             return _queue.empty();
         }
 
         template<typename T>
         std::uint32_t Queue<T>::size() {
-            std::lock_guard _{_mutex};
+            std::scoped_lock _{_mutex};
             return _queue.size();
         }
 
         template<typename T>
         std::optional<T> Queue<T>::pop() {
-            std::lock_guard _{_mutex};
+            std::scoped_lock _{_mutex};
             if (_queue.empty()) {
                 return {};
             }
@@ -39,7 +39,7 @@ namespace edsdk_w {
 
         template<typename T>
         void Queue<T>::push(const T &item) {
-            std::lock_guard _{_mutex};
+            std::scoped_lock _{_mutex};
             _queue.push(item);
         }
 
@@ -635,7 +635,7 @@ namespace edsdk_w {
             if (err == EDS_ERR_OK) {
                 err = EdsSetPropertyData(camera, _prop_id, 0, dataSize, &_value);
                 if (err == EDS_ERR_OK) {
-                    std::lock_guard _{props_mutex};
+                    std::scoped_lock _{props_mutex};
                     *prop_ptr = _value;
                 }
             }
@@ -729,7 +729,7 @@ namespace edsdk_w {
         //loading initial properties values from camera
         EdsOpenSession(_camera_ref);
 
-        std::lock_guard properties_lock_guard{_properties.mutex};
+        std::scoped_lock properties_lock_guard{_properties.mutex};
         _properties.name = _retrieve_property<std::string>(kEdsPropID_ProductName);
         _properties.current_storage = _retrieve_property<std::string>(kEdsPropID_CurrentStorage);
         _properties.body_id = _retrieve_property<std::string>(kEdsPropID_BodyIDEx);
@@ -750,7 +750,7 @@ namespace edsdk_w {
         _properties.tv = _retrieve_property<std::uint32_t>(kEdsPropID_Tv);
         _properties.exposure_compensation = _retrieve_property<std::uint32_t>(kEdsPropID_ExposureCompensation);
 
-        std::lock_guard properties_constraints_lock_guard{_properties_constraints.mutex};
+        std::scoped_lock properties_constraints_lock_guard{_properties_constraints.mutex};
         _properties_constraints.white_balance = _retrieve_property_constraints(kEdsPropID_WhiteBalance);
         _properties_constraints.color_temperature = _retrieve_property_constraints(kEdsPropID_ColorTemperature);
         _properties_constraints.color_space = _retrieve_property_constraints(kEdsPropID_ColorSpace);
@@ -816,138 +816,138 @@ namespace edsdk_w {
     }
 
     std::string EDSDK::Camera::get_name() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return _properties.name;
     }
 
     std::string EDSDK::Camera::get_current_storage() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return _properties.current_storage;
     }
 
     std::string EDSDK::Camera::get_body_id() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return _properties.body_id;
     }
 
     std::string EDSDK::Camera::get_firmware_version() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return _properties.firmware_version;
     }
 
     std::string EDSDK::Camera::get_image_quality() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ImageQuality, _properties.image_quality);
     }
 
     std::string EDSDK::Camera::get_ae_mode() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_AEMode, _properties.ae_mode);
     }
 
     std::string EDSDK::Camera::get_af_mode() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_AFMode, _properties.af_mode);
     }
 
     std::string EDSDK::Camera::get_lens_name() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return _properties.lens_name;
     }
 
     std::string EDSDK::Camera::get_white_balance() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_WhiteBalance, _properties.white_balance);
     }
 
     std::string EDSDK::Camera::get_color_temperature() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorTemperature, _properties.color_temperature);
     }
 
     std::string EDSDK::Camera::get_color_space() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorSpace, _properties.color_space);
     }
 
     std::string EDSDK::Camera::get_drive_mode() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_DriveMode, _properties.drive_mode);
     }
 
     std::string EDSDK::Camera::get_metering_mode() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_MeteringMode, _properties.metering_mode);
     }
 
     std::string EDSDK::Camera::get_iso() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ISOSpeed, _properties.iso);
     }
 
     std::string EDSDK::Camera::get_av() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Av, _properties.av);
     }
 
     std::string EDSDK::Camera::get_tv() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Tv, _properties.tv);
     }
 
     std::string EDSDK::Camera::get_exposure_compensation() {
-        std::lock_guard _{_properties.mutex};
+        std::scoped_lock _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ExposureCompensation, _properties.exposure_compensation);
     }
 
     std::vector<std::string> EDSDK::Camera::get_white_balance_constraints() {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_WhiteBalance, _properties_constraints.white_balance);
     }
 
     std::vector<std::string> EDSDK::Camera::get_color_temperature_constraints() {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorTemperature, _properties_constraints.color_temperature);
     }
 
     std::vector<std::string> EDSDK::Camera::get_color_space_constraints() {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorSpace, _properties_constraints.color_space);
     }
 
     std::vector<std::string> EDSDK::Camera::get_drive_mode_constraints() {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_DriveMode, _properties_constraints.drive_mode);
     }
 
     std::vector<std::string> EDSDK::Camera::get_metering_mode_constraints() {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_MeteringMode, _properties_constraints.metering_mode);
     }
 
     std::vector<std::string> EDSDK::Camera::get_iso_constraints() {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ISOSpeed, _properties_constraints.iso);
     }
 
     std::vector<std::string> EDSDK::Camera::get_av_constraints() {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Av, _properties_constraints.av);
     }
 
     std::vector<std::string> EDSDK::Camera::get_tv_constraints() {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Tv, _properties_constraints.tv);
     }
 
     std::vector<std::string> EDSDK::Camera::get_exposure_compensation_constraints() {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ExposureCompensation, _properties_constraints.exposure_compensation);
     }
 
 
     void EDSDK::Camera::set_white_balance(std::uint32_t index_in_constraints) {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         std::uint32_t value = (index_in_constraints >= _properties_constraints.white_balance.size()) ?
                               UINT32_MAX :
                               _properties_constraints.white_balance[index_in_constraints];
@@ -956,7 +956,7 @@ namespace edsdk_w {
     }
 
     void EDSDK::Camera::set_color_temperature(std::uint32_t index_in_constraints) {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         std::uint32_t value = (index_in_constraints >= _properties_constraints.color_temperature.size()) ?
                               UINT32_MAX :
                               _properties_constraints.color_temperature[index_in_constraints];
@@ -965,7 +965,7 @@ namespace edsdk_w {
     }
 
     void EDSDK::Camera::set_color_space(std::uint32_t index_in_constraints) {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         std::uint32_t value = (index_in_constraints >= _properties_constraints.color_space.size()) ?
                               UINT32_MAX :
                               _properties_constraints.color_space[index_in_constraints];
@@ -974,7 +974,7 @@ namespace edsdk_w {
     }
 
     void EDSDK::Camera::set_drive_mode(std::uint32_t index_in_constraints) {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         std::uint32_t value = (index_in_constraints >= _properties_constraints.drive_mode.size()) ?
                               UINT32_MAX :
                               _properties_constraints.drive_mode[index_in_constraints];
@@ -983,7 +983,7 @@ namespace edsdk_w {
     }
 
     void EDSDK::Camera::set_metering_mode(std::uint32_t index_in_constraints) {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         std::uint32_t value = (index_in_constraints >= _properties_constraints.metering_mode.size()) ?
                               UINT32_MAX :
                               _properties_constraints.metering_mode[index_in_constraints];
@@ -992,7 +992,7 @@ namespace edsdk_w {
     }
 
     void EDSDK::Camera::set_iso(std::uint32_t index_in_constraints) {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         std::uint32_t value = (index_in_constraints >= _properties_constraints.iso.size()) ?
                               UINT32_MAX :
                               _properties_constraints.iso[index_in_constraints];
@@ -1001,7 +1001,7 @@ namespace edsdk_w {
     }
 
     void EDSDK::Camera::set_av(std::uint32_t index_in_constraints) {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         std::uint32_t value = (index_in_constraints >= _properties_constraints.av.size()) ?
                               UINT32_MAX :
                               _properties_constraints.av[index_in_constraints];
@@ -1010,7 +1010,7 @@ namespace edsdk_w {
     }
 
     void EDSDK::Camera::set_tv(std::uint32_t index_in_constraints) {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         std::uint32_t value = (index_in_constraints >= _properties_constraints.tv.size()) ?
                               UINT32_MAX :
                               _properties_constraints.tv[index_in_constraints];
@@ -1019,7 +1019,7 @@ namespace edsdk_w {
     }
 
     void EDSDK::Camera::set_exposure_compensation(std::uint32_t index_in_constraints) {
-        std::lock_guard _{_properties_constraints.mutex};
+        std::scoped_lock _{_properties_constraints.mutex};
         std::uint32_t value = (index_in_constraints >= _properties_constraints.exposure_compensation.size()) ?
                               UINT32_MAX :
                               _properties_constraints.exposure_compensation[index_in_constraints];
@@ -1108,7 +1108,7 @@ namespace edsdk_w {
                                                     EdsUInt32 param,
                                                     EdsVoid *ctx) {
         auto camera = static_cast<EDSDK::Camera*>(ctx);
-        std::lock_guard _{camera->_properties.mutex};
+        std::scoped_lock _{camera->_properties.mutex};
         switch (prop_id) {
             case kEdsPropID_WhiteBalance:
                 camera->_properties.white_balance = camera->_retrieve_property<std::uint32_t>(prop_id);
