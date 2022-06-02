@@ -570,16 +570,70 @@ namespace edsdk_w {
         CommandSetProperty(EdsPropertyID prop_id, EdsUInt32 value) : Command{}, _prop_id{prop_id}, _value{value} {}
 
         bool dispatch(EDSDK::Camera* camera) override {
-            //TODO: implement this;
+            std::uint32_t *prop_ptr;
+            switch (_prop_id) {
+                case kEdsPropID_WhiteBalance:
+                    prop_ptr = &camera->_properties.white_balance;
+                    break;
+                case kEdsPropID_ColorTemperature:
+                    prop_ptr = &camera->_properties.color_temperature;
+                    break;
+                case kEdsPropID_ColorSpace:
+                    prop_ptr = &camera->_properties.color_space;
+                    break;
+                case kEdsPropID_DriveMode:
+                    prop_ptr = &camera->_properties.drive_mode;
+                    break;
+                case kEdsPropID_MeteringMode:
+                    prop_ptr = &camera->_properties.metering_mode;
+                    break;
+                case kEdsPropID_ISOSpeed:
+                    prop_ptr = &camera->_properties.iso;
+                    break;
+                case kEdsPropID_Av:
+                    prop_ptr = &camera->_properties.av;
+                    break;
+                case kEdsPropID_Tv:
+                    prop_ptr = &camera->_properties.tv;
+                    break;
+                case kEdsPropID_ExposureCompensation:
+                    prop_ptr = &camera->_properties.exposure_compensation;
+                    break;
+                default:
+                    return false;
+            }
+
+            return _set_property(camera->_camera_ref,
+                                 prop_ptr,
+                                 camera->_properties.mutex);
         }
     private:
+        bool _set_property(EdsCameraRef camera,
+                           std::uint32_t *prop_ptr,
+                           std::mutex &props_mutex) {
+            EdsError err;
+            EdsDataType dataType;
+            EdsUInt32 dataSize;
+
+            err = EdsGetPropertySize(camera, _prop_id, 0, &dataType, &dataSize);
+            if (err == EDS_ERR_OK) {
+                err = EdsSetPropertyData(camera, _prop_id, 0, dataSize, &_value);
+                if (err == EDS_ERR_OK) {
+                    std::lock_guard _{props_mutex};
+                    *prop_ptr = _value;
+                }
+            }
+
+            return err == EDS_ERR_OK;
+        }
+
         EdsPropertyID _prop_id;
         EdsUInt32 _value;
     };
 
     class EDSDK::Camera::CommandSetState : public Command {
     public:
-        CommandSetState(EdsCameraStatusCommand command) : Command{}, _command{command} {}
+        explicit CommandSetState(EdsCameraStatusCommand command) : Command{}, _command{command} {}
 
         bool dispatch(EDSDK::Camera* camera) override {
             return EdsSendStatusCommand(camera->_camera_ref, _command, 0) == EDS_ERR_OK;
@@ -964,30 +1018,6 @@ namespace edsdk_w {
 
         return res;
     }
-
-    bool EDSDK::Camera::_set_property(EdsUInt32 prop_id,
-                                      std::uint32_t *prop_ptr,
-                                      const std::vector<std::uint32_t> &constraints,
-                                      std::uint32_t value_index) {
-        if (value_index >= constraints.size()) return false;
-
-        EdsError err;
-        EdsDataType dataType;
-        EdsUInt32 dataSize;
-
-        err = EdsGetPropertySize(_camera_ref, prop_id, 0, &dataType, &dataSize);
-        if (err == EDS_ERR_OK) {
-            std::lock_guard properties_constraints_lock_guard{_properties_constraints.mutex};
-            err = EdsSetPropertyData(_camera_ref, prop_id, 0, dataSize, &constraints[value_index]);
-            if (err == EDS_ERR_OK) {
-                std::lock_guard properties_lock_guard{_properties.mutex};
-                *prop_ptr = constraints[value_index];
-            }
-        }
-
-        return err == EDS_ERR_OK;
-    }
-
 
 } //namespace edsdk_w
 
