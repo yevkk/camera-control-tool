@@ -1057,6 +1057,8 @@ namespace edsdk_w {
     }
 
     void EDSDK::Camera::_command_dispatcher() {
+        CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
         if (EdsOpenSession(_camera_ref) == EDS_ERR_OK) {
             _explicit_session_opened = true;
         }
@@ -1074,6 +1076,8 @@ namespace edsdk_w {
         if (EdsCloseSession(_camera_ref) == EDS_ERR_OK) {
             _explicit_session_opened = false;
         }
+
+        CoUninitialize();
     }
 
 } //namespace edsdk_w
