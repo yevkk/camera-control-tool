@@ -85,15 +85,15 @@ namespace edsdk_w {
             [[nodiscard]] std::vector<std::string> get_tv_constraints();
             [[nodiscard]] std::vector<std::string> get_exposure_compensation_constraints();
 
-            bool set_white_balance(std::uint32_t index_in_constraints);
-            bool set_color_temperature(std::uint32_t index_in_constraints);
-            bool set_color_space(std::uint32_t index_in_constraints);
-            bool set_drive_mode(std::uint32_t index_in_constraints);
-            bool set_metering_mode(std::uint32_t index_in_constraints);
-            bool set_iso(std::uint32_t index_in_constraints);
-            bool set_av(std::uint32_t index_in_constraints);
-            bool set_tv(std::uint32_t index_in_constraints);
-            bool set_exposure_compensation(std::uint32_t index_in_constraints);
+            void set_white_balance(std::uint32_t index_in_constraints);
+            void set_color_temperature(std::uint32_t index_in_constraints);
+            void set_color_space(std::uint32_t index_in_constraints);
+            void set_drive_mode(std::uint32_t index_in_constraints);
+            void set_metering_mode(std::uint32_t index_in_constraints);
+            void set_iso(std::uint32_t index_in_constraints);
+            void set_av(std::uint32_t index_in_constraints);
+            void set_tv(std::uint32_t index_in_constraints);
+            void set_exposure_compensation(std::uint32_t index_in_constraints);
 
         private:
              explicit Camera(EdsCameraRef camera);
