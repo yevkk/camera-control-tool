@@ -8,6 +8,7 @@
 #include <queue>
 #include <atomic>
 #include <mutex>
+#include <thread>
 #include "EDSDKTypes.h"
 
 namespace edsdk_w {
@@ -54,6 +55,9 @@ namespace edsdk_w {
 
             void open_session();
             void close_session();
+
+            void lock_ui();
+            void unlock_ui();
 
             [[nodiscard]] std::string get_name();
             [[nodiscard]] std::string get_current_storage();
@@ -105,6 +109,8 @@ namespace edsdk_w {
 
             std::vector<std::uint32_t> _retrieve_property_constraints(EdsUInt32 prop_id);
 
+            void _command_dispatcher();
+
             struct {
                 //immutable
                 std::string name;
@@ -149,6 +155,9 @@ namespace edsdk_w {
             EdsCameraRef _camera_ref;
             std::atomic_bool _explicit_session_opened;
             utils::Queue<Command*> _command_queue;
+
+            std::atomic_bool _stop_thread;
+            std::thread _dispatcher_thread;
 
             friend EDSDK;
         };

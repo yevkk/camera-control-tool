@@ -662,6 +662,7 @@ namespace edsdk_w {
                     return _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_Completely) &&
                            _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_OFF);
             }
+            return false;
         }
     private:
         inline static bool _shutter_control(EdsCameraRef camera, EdsInt32 param) {
@@ -686,6 +687,7 @@ namespace edsdk_w {
                 case Action::CLOSE:
                     return _close_session(camera);
             }
+            return false;
         }
     private:
         static bool _open_session(EDSDK::Camera* camera) {
@@ -710,7 +712,7 @@ namespace edsdk_w {
     };
 
     EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false}, _command_queue{} {
-        open_session();
+        EdsOpenSession(_camera_ref);
 
         std::lock_guard properties_lock_guard{_properties.mutex};
         _properties.name = _retrieve_property<std::string>(kEdsPropID_ProductName);
@@ -743,10 +745,17 @@ namespace edsdk_w {
         _properties_constraints.av = _retrieve_property_constraints(kEdsPropID_Av);
         _properties_constraints.tv = _retrieve_property_constraints(kEdsPropID_Tv);
         _properties_constraints.exposure_compensation = _retrieve_property_constraints(kEdsPropID_ExposureCompensation);
+
+        EdsCloseSession(_camera_ref);
+
+        _stop_thread = false;
+        _dispatcher_thread = std::thread{&EDSDK::Camera::_command_dispatcher, this};
     }
 
     EDSDK::Camera::~Camera()  {
-        close_session();
+        _stop_thread = true;
+        _dispatcher_thread.join();
+
         if (_camera_ref) {
             EdsRelease(_camera_ref);
         }
@@ -780,6 +789,14 @@ namespace edsdk_w {
 
     void EDSDK::Camera::close_session() {
         _command_queue.push(new EDSDK::Camera::CommandSessionControl{EDSDK::Camera::CommandSessionControl::Action::CLOSE});
+    }
+
+    void EDSDK::Camera::lock_ui() {
+        _command_queue.push(new EDSDK::Camera::CommandSetState{kEdsCameraStatusCommand_UILock});
+    }
+
+    void EDSDK::Camera::unlock_ui() {
+        _command_queue.push(new EDSDK::Camera::CommandSetState{kEdsCameraStatusCommand_UIUnLock});
     }
 
     std::string EDSDK::Camera::get_name() {
@@ -1037,6 +1054,26 @@ namespace edsdk_w {
         }
 
         return res;
+    }
+
+    void EDSDK::Camera::_command_dispatcher() {
+        if (EdsOpenSession(_camera_ref) == EDS_ERR_OK) {
+            _explicit_session_opened = true;
+        }
+
+        while(!_stop_thread) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+            if (!_command_queue.empty()) {
+                auto tmp = _command_queue.pop().value();
+                tmp->dispatch(this);
+                delete tmp;
+            }
+        }
+
+        if (EdsCloseSession(_camera_ref) == EDS_ERR_OK) {
+            _explicit_session_opened = false;
+        }
     }
 
 } //namespace edsdk_w
