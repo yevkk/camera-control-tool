@@ -431,15 +431,16 @@ namespace edsdk_w {
         return instance;
     }
 
-    EDSDK::EDSDK() : _camera{nullptr} {
-        assert(EdsInitializeSDK() == EDS_ERR_OK && "EDSDK initialization error");
-        std::cout << "SDK Initialized" << std::endl; //TODO: remove console debug
+    EDSDK::EDSDK() : _camera{nullptr}, _stop_thread{false}, _event_loop_thread{&EDSDK::_event_loop, this} {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     }
 
     EDSDK::~EDSDK() {
         reset_camera();
-        assert(EdsTerminateSDK() == EDS_ERR_OK && "EDSDK termination error");
-        std::cout << "SDK terminated" << std::endl; //TODO: remove console debug
+        _stop_thread = true;
+        _event_loop_thread.join();
+        CoUninitialize();
     }
 
     std::vector<std::string> EDSDK::get_available_camera_list() {
@@ -556,6 +557,19 @@ namespace edsdk_w {
         }
 
         return res;
+    }
+
+    void EDSDK::_event_loop() {
+        assert(EdsInitializeSDK() == EDS_ERR_OK && "EDSDK initialization error");
+        std::cout << "SDK Initialized" << std::endl; //TODO: remove console debug
+
+        while(!_stop_thread) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(112));
+            EdsGetEvent();
+        }
+
+        assert(EdsTerminateSDK() == EDS_ERR_OK && "EDSDK termination error");
+        std::cout << "SDK terminated" << std::endl; //TODO: remove console debug
     }
 
     class EDSDK::Camera::Command {
@@ -712,6 +726,7 @@ namespace edsdk_w {
     };
 
     EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false}, _command_queue{} {
+        //loading initial properties values from camera
         EdsOpenSession(_camera_ref);
 
         std::lock_guard properties_lock_guard{_properties.mutex};
@@ -748,6 +763,7 @@ namespace edsdk_w {
 
         EdsCloseSession(_camera_ref);
 
+        //starting dispatcher thread
         _stop_thread = false;
         _dispatcher_thread = std::thread{&EDSDK::Camera::_command_dispatcher, this};
     }
@@ -1063,9 +1079,16 @@ namespace edsdk_w {
             _explicit_session_opened = true;
         }
 
+        //setting event callbacks
+        EdsSetPropertyEventHandler(_camera_ref,
+                                   kEdsPropertyEvent_PropertyChanged,
+                                   EDSDK::Camera::_property_changed_callback,
+                                   this);
+
         while(!_stop_thread) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
+            EdsGetEvent();
             if (!_command_queue.empty()) {
                 auto tmp = _command_queue.pop().value();
                 tmp->dispatch(this);
@@ -1078,6 +1101,64 @@ namespace edsdk_w {
         }
 
         CoUninitialize();
+    }
+
+    EdsError EDSCALLBACK EDSDK::Camera::_property_changed_callback(EdsPropertyEvent event,
+                                                    EdsPropertyID prop_id,
+                                                    EdsUInt32 param,
+                                                    EdsVoid *ctx) {
+        auto camera = static_cast<EDSDK::Camera*>(ctx);
+        std::lock_guard _{camera->_properties.mutex};
+        switch (prop_id) {
+            case kEdsPropID_WhiteBalance:
+                camera->_properties.white_balance = camera->_retrieve_property<std::uint32_t>(prop_id);
+//                std::cout << "WB: " << explain_prop_value(prop_id,  camera->_properties.white_balance) << "\n";
+                break;
+            case kEdsPropID_ColorTemperature:
+                camera->_properties.color_temperature = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_ColorSpace:
+                camera->_properties.color_space = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_DriveMode:
+                camera->_properties.drive_mode = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_MeteringMode:
+                camera->_properties.metering_mode = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_ISOSpeed:
+                camera->_properties.iso = camera->_retrieve_property<std::uint32_t>(prop_id);
+//                std::cout << "ISO: " << explain_prop_value(prop_id, camera->_properties.iso) << "\n";
+                break;
+            case kEdsPropID_Av:
+                camera->_properties.av = camera->_retrieve_property<std::uint32_t>(prop_id);
+//                std::cout << "AV: " << explain_prop_value(prop_id, camera->_properties.av) << "\n";
+                break;
+            case kEdsPropID_Tv:
+                camera->_properties.tv = camera->_retrieve_property<std::uint32_t>(prop_id);
+//                std::cout << "TV: " << explain_prop_value(prop_id, camera->_properties.tv) << "\n";
+                break;
+            case kEdsPropID_ExposureCompensation:
+                camera->_properties.exposure_compensation = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_ImageQuality:
+                camera->_properties.image_quality = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_AEMode:
+                camera->_properties.ae_mode = camera->_retrieve_property<std::uint32_t>(prop_id);
+//                std::cout << "AE: " << explain_prop_value(prop_id, camera->_properties.ae_mode) << "\n";
+                break;
+            case kEdsPropID_AFMode:
+                camera->_properties.af_mode = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_LensStatus:
+                camera->_properties.lens_name = camera->_retrieve_property<std::string>(kEdsPropID_LensName);
+//                std::cout << "Lens: " << camera->_properties.lens_name << "\n";
+                break;
+            default:
+                return EDS_ERR_INVALID_PARAMETER;
+        }
+        return EDS_ERR_OK;
     }
 
 } //namespace edsdk_w
