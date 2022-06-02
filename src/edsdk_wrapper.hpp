@@ -105,11 +105,6 @@ namespace edsdk_w {
 
             std::vector<std::uint32_t> _retrieve_property_constraints(EdsUInt32 prop_id);
 
-            bool _set_property(EdsUInt32 prop_id,
-                               std::uint32_t *prop_ptr,
-                               const std::vector<std::uint32_t> &constraints,
-                               std::uint32_t value_index);
-
             struct {
                 //immutable
                 std::string name;
