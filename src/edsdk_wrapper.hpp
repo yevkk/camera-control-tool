@@ -45,10 +45,10 @@ namespace edsdk_w {
             class CommandShutterControl;
             class CommandSessionControl;
         public:
-            bool shutter_button();
-            bool shutter_button_press();
-            bool shutter_button_press_halfway();
-            bool shutter_button_release();
+            void shutter_button();
+            void shutter_button_press();
+            void shutter_button_press_halfway();
+            void shutter_button_release();
 
             bool update_shutdown_timer();
 
@@ -99,8 +99,6 @@ namespace edsdk_w {
              explicit Camera(EdsCameraRef camera);
 
             ~Camera();
-
-            inline bool _shutter_button_command(EdsInt32 param);
 
             template <typename T>
             T _retrieve_property(EdsUInt32 prop_id);

@@ -592,12 +592,28 @@ namespace edsdk_w {
     public:
         enum class Action {RELEASE, PRESS_FULL, PRESS_HALFWAY, PRESS_AND_RELEASE};
 
-        CommandShutterControl(Action action) : Command{}, _action{action} {}
+        explicit CommandShutterControl(Action action) : Command{}, _action{action} {}
 
-            //TODO: implement this;
         bool dispatch(EDSDK::Camera* camera) override {
+            switch (_action) {
+                case Action::RELEASE:
+                    return _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_OFF);
+                case Action::PRESS_FULL:
+                    return _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_Completely);
+                case Action::PRESS_HALFWAY:
+                    return _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_Halfway);
+                case Action::PRESS_AND_RELEASE:
+                    return _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_Completely) &&
+                           _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_OFF);
+            }
         }
     private:
+        inline static bool _shutter_control(EdsCameraRef camera, EdsInt32 param) {
+            return EdsSendCommand(camera,
+                                  kEdsCameraCommand_PressShutterButton,
+                                  param) == EDS_ERR_OK;
+        }
+
         Action _action;
     };
 
@@ -605,7 +621,7 @@ namespace edsdk_w {
     public:
         enum class Action {OPEN, CLOSE};
 
-        CommandSessionControl(Action action) : Command{}, _action{action} {}
+        explicit CommandSessionControl(Action action) : Command{}, _action{action} {}
 
         bool dispatch(EDSDK::Camera* camera) override {
             switch (_action) {
@@ -680,20 +696,20 @@ namespace edsdk_w {
         }
     }
 
-    bool EDSDK::Camera::shutter_button() {
-        return shutter_button_press() && shutter_button_release();
+    void EDSDK::Camera:: shutter_button() {
+        _command_queue.push(new EDSDK::Camera::CommandShutterControl(EDSDK::Camera::CommandShutterControl::Action::PRESS_AND_RELEASE));
     }
 
-    bool EDSDK::Camera::shutter_button_press() {
-        return _shutter_button_command(kEdsCameraCommand_ShutterButton_Completely);
+    void EDSDK::Camera::shutter_button_press() {
+        _command_queue.push(new EDSDK::Camera::CommandShutterControl(EDSDK::Camera::CommandShutterControl::Action::PRESS_FULL));
     }
 
-    bool EDSDK::Camera::shutter_button_press_halfway() {
-        return _shutter_button_command(kEdsCameraCommand_ShutterButton_Halfway);
+    void EDSDK::Camera::shutter_button_press_halfway() {
+        _command_queue.push(new EDSDK::Camera::CommandShutterControl(EDSDK::Camera::CommandShutterControl::Action::PRESS_HALFWAY));
     }
 
-    bool EDSDK::Camera::shutter_button_release() {
-        return _shutter_button_command(kEdsCameraCommand_ShutterButton_OFF);
+    void EDSDK::Camera::shutter_button_release() {
+        _command_queue.push(new EDSDK::Camera::CommandShutterControl(EDSDK::Camera::CommandShutterControl::Action::RELEASE));
     }
 
     bool EDSDK::Camera::update_shutdown_timer() {
@@ -703,11 +719,11 @@ namespace edsdk_w {
     }
 
     void EDSDK::Camera::open_session() {
-
+        _command_queue.push(new EDSDK::Camera::CommandSessionControl{EDSDK::Camera::CommandSessionControl::Action::OPEN});
     }
 
     void EDSDK::Camera::close_session() {
-
+        _command_queue.push(new EDSDK::Camera::CommandSessionControl{EDSDK::Camera::CommandSessionControl::Action::CLOSE});
     }
 
     std::string EDSDK::Camera::get_name() {
@@ -902,12 +918,6 @@ namespace edsdk_w {
                              &_properties.exposure_compensation,
                              _properties_constraints.exposure_compensation,
                              index_in_constraints);
-    }
-
-    inline bool EDSDK::Camera::_shutter_button_command(EdsInt32 param) {
-        return EdsSendCommand(_camera_ref,
-                              kEdsCameraCommand_PressShutterButton,
-                              param) == EDS_ERR_OK;
     }
 
     template <typename T>
