@@ -9,6 +9,41 @@
 
 namespace edsdk_w {
     namespace utils {
+        template<typename T>
+        Queue<T>::Queue(Queue<T>&& other)  noexcept {
+            _queue = std::move(other._queue);
+        }
+
+        template<typename T>
+        bool Queue<T>::empty() {
+            std::lock_guard _{_mutex};
+            return _queue.empty();
+        }
+
+        template<typename T>
+        std::uint32_t Queue<T>::size() {
+            std::lock_guard _{_mutex};
+            return _queue.size();
+        }
+
+        template<typename T>
+        std::optional<T> Queue<T>::pop() {
+            std::lock_guard _{_mutex};
+            if (_queue.empty()) {
+                return {};
+            }
+            T tmp = _queue.front();
+            _queue.pop();
+            return tmp;
+        }
+
+        template<typename T>
+        void Queue<T>::push(const T &item) {
+            std::lock_guard _{_mutex};
+            _queue.push(item);
+        }
+
+
         std::string explain_prop_value_image_quality(std::uint32_t value) {
             auto image_type = [](std::uint8_t v) {
                 switch (v) {
@@ -523,9 +558,163 @@ namespace edsdk_w {
         return res;
     }
 
-    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false} {
-        open_session();
+    class EDSDK::Camera::Command {
+    public:
+        virtual bool dispatch(EDSDK::Camera*) = 0;
 
+        virtual ~Command() = default;
+    };
+
+    class EDSDK::Camera::CommandSetProperty : public Command {
+    public:
+        CommandSetProperty(EdsPropertyID prop_id, EdsUInt32 value) : Command{}, _prop_id{prop_id}, _value{value} {}
+
+        bool dispatch(EDSDK::Camera* camera) override {
+            std::uint32_t *prop_ptr;
+            switch (_prop_id) {
+                case kEdsPropID_WhiteBalance:
+                    prop_ptr = &camera->_properties.white_balance;
+                    break;
+                case kEdsPropID_ColorTemperature:
+                    prop_ptr = &camera->_properties.color_temperature;
+                    break;
+                case kEdsPropID_ColorSpace:
+                    prop_ptr = &camera->_properties.color_space;
+                    break;
+                case kEdsPropID_DriveMode:
+                    prop_ptr = &camera->_properties.drive_mode;
+                    break;
+                case kEdsPropID_MeteringMode:
+                    prop_ptr = &camera->_properties.metering_mode;
+                    break;
+                case kEdsPropID_ISOSpeed:
+                    prop_ptr = &camera->_properties.iso;
+                    break;
+                case kEdsPropID_Av:
+                    prop_ptr = &camera->_properties.av;
+                    break;
+                case kEdsPropID_Tv:
+                    prop_ptr = &camera->_properties.tv;
+                    break;
+                case kEdsPropID_ExposureCompensation:
+                    prop_ptr = &camera->_properties.exposure_compensation;
+                    break;
+                default:
+                    return false;
+            }
+
+            return _set_property(camera->_camera_ref,
+                                 prop_ptr,
+                                 camera->_properties.mutex);
+        }
+    private:
+        bool _set_property(EdsCameraRef camera,
+                           std::uint32_t *prop_ptr,
+                           std::mutex &props_mutex) {
+            if (_value == UINT32_MAX) return false;
+
+            EdsError err;
+            EdsDataType dataType;
+            EdsUInt32 dataSize;
+
+            err = EdsGetPropertySize(camera, _prop_id, 0, &dataType, &dataSize);
+            if (err == EDS_ERR_OK) {
+                err = EdsSetPropertyData(camera, _prop_id, 0, dataSize, &_value);
+                if (err == EDS_ERR_OK) {
+                    std::lock_guard _{props_mutex};
+                    *prop_ptr = _value;
+                }
+            }
+
+            return err == EDS_ERR_OK;
+        }
+
+        EdsPropertyID _prop_id;
+        EdsUInt32 _value;
+    };
+
+    class EDSDK::Camera::CommandSetState : public Command {
+    public:
+        explicit CommandSetState(EdsCameraStatusCommand command) : Command{}, _command{command} {}
+
+        bool dispatch(EDSDK::Camera* camera) override {
+            return EdsSendStatusCommand(camera->_camera_ref, _command, 0) == EDS_ERR_OK;
+        }
+    private:
+        EdsCameraStatusCommand _command;
+    };
+
+    class EDSDK::Camera::CommandShutterControl : public Command {
+    public:
+        enum class Action {RELEASE, PRESS_FULL, PRESS_HALFWAY, PRESS_AND_RELEASE};
+
+        explicit CommandShutterControl(Action action) : Command{}, _action{action} {}
+
+        bool dispatch(EDSDK::Camera* camera) override {
+            switch (_action) {
+                case Action::RELEASE:
+                    return _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_OFF);
+                case Action::PRESS_FULL:
+                    return _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_Completely);
+                case Action::PRESS_HALFWAY:
+                    return _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_Halfway);
+                case Action::PRESS_AND_RELEASE:
+                    return _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_Completely) &&
+                           _shutter_control(camera->_camera_ref, kEdsCameraCommand_ShutterButton_OFF);
+            }
+            return false;
+        }
+    private:
+        inline static bool _shutter_control(EdsCameraRef camera, EdsInt32 param) {
+            return EdsSendCommand(camera,
+                                  kEdsCameraCommand_PressShutterButton,
+                                  param) == EDS_ERR_OK;
+        }
+
+        Action _action;
+    };
+
+    class EDSDK::Camera::CommandSessionControl : public Command {
+    public:
+        enum class Action {OPEN, CLOSE};
+
+        explicit CommandSessionControl(Action action) : Command{}, _action{action} {}
+
+        bool dispatch(EDSDK::Camera* camera) override {
+            switch (_action) {
+                case Action::OPEN:
+                    return _open_session(camera);
+                case Action::CLOSE:
+                    return _close_session(camera);
+            }
+            return false;
+        }
+    private:
+        static bool _open_session(EDSDK::Camera* camera) {
+            if (camera->_explicit_session_opened) {
+                return false;
+            }
+
+            camera->_explicit_session_opened = (EdsOpenSession(camera->_camera_ref) == EDS_ERR_OK);
+            return camera->_explicit_session_opened;
+        }
+
+        static bool _close_session(EDSDK::Camera* camera) {
+            if (!camera->_explicit_session_opened) {
+                return false;
+            }
+
+            camera->_explicit_session_opened = (EdsCloseSession(camera->_camera_ref) != EDS_ERR_OK);
+            return !camera->_explicit_session_opened;
+        }
+
+        Action _action;
+    };
+
+    EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false}, _command_queue{} {
+        EdsOpenSession(_camera_ref);
+
+        std::lock_guard properties_lock_guard{_properties.mutex};
         _properties.name = _retrieve_property<std::string>(kEdsPropID_ProductName);
         _properties.current_storage = _retrieve_property<std::string>(kEdsPropID_CurrentStorage);
         _properties.body_id = _retrieve_property<std::string>(kEdsPropID_BodyIDEx);
@@ -546,6 +735,7 @@ namespace edsdk_w {
         _properties.tv = _retrieve_property<std::uint32_t>(kEdsPropID_Tv);
         _properties.exposure_compensation = _retrieve_property<std::uint32_t>(kEdsPropID_ExposureCompensation);
 
+        std::lock_guard properties_constraints_lock_guard{_properties_constraints.mutex};
         _properties_constraints.white_balance = _retrieve_property_constraints(kEdsPropID_WhiteBalance);
         _properties_constraints.color_temperature = _retrieve_property_constraints(kEdsPropID_ColorTemperature);
         _properties_constraints.color_space = _retrieve_property_constraints(kEdsPropID_ColorSpace);
@@ -555,31 +745,36 @@ namespace edsdk_w {
         _properties_constraints.av = _retrieve_property_constraints(kEdsPropID_Av);
         _properties_constraints.tv = _retrieve_property_constraints(kEdsPropID_Tv);
         _properties_constraints.exposure_compensation = _retrieve_property_constraints(kEdsPropID_ExposureCompensation);
+
+        EdsCloseSession(_camera_ref);
+
+        _stop_thread = false;
+        _dispatcher_thread = std::thread{&EDSDK::Camera::_command_dispatcher, this};
     }
 
     EDSDK::Camera::~Camera()  {
-        close_session();
+        _stop_thread = true;
+        _dispatcher_thread.join();
+
         if (_camera_ref) {
             EdsRelease(_camera_ref);
         }
     }
 
-    bool EDSDK::Camera::shutter_button() {
-        return shutter_button_press() && shutter_button_release();
+    void EDSDK::Camera:: shutter_button() {
+        _command_queue.push(new EDSDK::Camera::CommandShutterControl(EDSDK::Camera::CommandShutterControl::Action::PRESS_AND_RELEASE));
     }
 
-    bool EDSDK::Camera::shutter_button_press() {
-        EdsOpenSession(_camera_ref);
-        return _shutter_button_command(kEdsCameraCommand_ShutterButton_Completely);
+    void EDSDK::Camera::shutter_button_press() {
+        _command_queue.push(new EDSDK::Camera::CommandShutterControl(EDSDK::Camera::CommandShutterControl::Action::PRESS_FULL));
     }
 
-    bool EDSDK::Camera::shutter_button_press_halfway() {
-        EdsOpenSession(_camera_ref);
-        return _shutter_button_command(kEdsCameraCommand_ShutterButton_Halfway);
+    void EDSDK::Camera::shutter_button_press_halfway() {
+        _command_queue.push(new EDSDK::Camera::CommandShutterControl(EDSDK::Camera::CommandShutterControl::Action::PRESS_HALFWAY));
     }
 
-    bool EDSDK::Camera::shutter_button_release() {
-        return _shutter_button_command(kEdsCameraCommand_ShutterButton_OFF);
+    void EDSDK::Camera::shutter_button_release() {
+        _command_queue.push(new EDSDK::Camera::CommandShutterControl(EDSDK::Camera::CommandShutterControl::Action::RELEASE));
     }
 
     bool EDSDK::Camera::update_shutdown_timer() {
@@ -588,196 +783,232 @@ namespace edsdk_w {
                               0) == EDS_ERR_OK;
     }
 
-    bool EDSDK::Camera::open_session() {
-        if (_explicit_session_opened) {
-            return false;
-        }
-
-        _explicit_session_opened = (EdsOpenSession(_camera_ref) == EDS_ERR_OK);
-        return _explicit_session_opened;
+    void EDSDK::Camera::open_session() {
+        _command_queue.push(new EDSDK::Camera::CommandSessionControl{EDSDK::Camera::CommandSessionControl::Action::OPEN});
     }
 
-    bool EDSDK::Camera::close_session() {
-        if (!_explicit_session_opened) {
-            return false;
-        }
-
-        _explicit_session_opened = (EdsCloseSession(_camera_ref) != EDS_ERR_OK);
-        return !_explicit_session_opened;
+    void EDSDK::Camera::close_session() {
+        _command_queue.push(new EDSDK::Camera::CommandSessionControl{EDSDK::Camera::CommandSessionControl::Action::CLOSE});
     }
 
-    std::string EDSDK::Camera::get_name() const {
+    void EDSDK::Camera::lock_ui() {
+        _command_queue.push(new EDSDK::Camera::CommandSetState{kEdsCameraStatusCommand_UILock});
+    }
+
+    void EDSDK::Camera::unlock_ui() {
+        _command_queue.push(new EDSDK::Camera::CommandSetState{kEdsCameraStatusCommand_UIUnLock});
+    }
+
+    std::string EDSDK::Camera::get_name() {
+        std::lock_guard _{_properties.mutex};
         return _properties.name;
     }
 
-    std::string EDSDK::Camera::get_current_storage() const {
+    std::string EDSDK::Camera::get_current_storage() {
+        std::lock_guard _{_properties.mutex};
         return _properties.current_storage;
     }
 
-    std::string EDSDK::Camera::get_body_id() const {
+    std::string EDSDK::Camera::get_body_id() {
+        std::lock_guard _{_properties.mutex};
         return _properties.body_id;
     }
 
-    std::string EDSDK::Camera::get_firmware_version() const {
+    std::string EDSDK::Camera::get_firmware_version() {
+        std::lock_guard _{_properties.mutex};
         return _properties.firmware_version;
     }
 
-    std::string EDSDK::Camera::get_image_quality() const {
+    std::string EDSDK::Camera::get_image_quality() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ImageQuality, _properties.image_quality);
     }
 
-    std::string EDSDK::Camera::get_ae_mode() const {
+    std::string EDSDK::Camera::get_ae_mode() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_AEMode, _properties.ae_mode);
     }
 
-    std::string EDSDK::Camera::get_af_mode() const {
+    std::string EDSDK::Camera::get_af_mode() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_AFMode, _properties.af_mode);
     }
 
-    std::string EDSDK::Camera::get_lens_name() const {
+    std::string EDSDK::Camera::get_lens_name() {
+        std::lock_guard _{_properties.mutex};
         return _properties.lens_name;
     }
 
-    std::string EDSDK::Camera::get_white_balance() const {
+    std::string EDSDK::Camera::get_white_balance() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_WhiteBalance, _properties.white_balance);
     }
 
-    std::string EDSDK::Camera::get_color_temperature() const {
+    std::string EDSDK::Camera::get_color_temperature() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorTemperature, _properties.color_temperature);
     }
 
-    std::string EDSDK::Camera::get_color_space() const {
+    std::string EDSDK::Camera::get_color_space() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorSpace, _properties.color_space);
     }
 
-    std::string EDSDK::Camera::get_drive_mode() const {
+    std::string EDSDK::Camera::get_drive_mode() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_DriveMode, _properties.drive_mode);
     }
 
-    std::string EDSDK::Camera::get_metering_mode() const {
+    std::string EDSDK::Camera::get_metering_mode() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_MeteringMode, _properties.metering_mode);
     }
 
-    std::string EDSDK::Camera::get_iso() const {
+    std::string EDSDK::Camera::get_iso() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ISOSpeed, _properties.iso);
     }
 
-    std::string EDSDK::Camera::get_av() const {
+    std::string EDSDK::Camera::get_av() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Av, _properties.av);
     }
 
-    std::string EDSDK::Camera::get_tv() const {
+    std::string EDSDK::Camera::get_tv() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Tv, _properties.tv);
     }
 
-    std::string EDSDK::Camera::get_exposure_compensation() const {
+    std::string EDSDK::Camera::get_exposure_compensation() {
+        std::lock_guard _{_properties.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ExposureCompensation, _properties.exposure_compensation);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_white_balance_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_white_balance_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_WhiteBalance, _properties_constraints.white_balance);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_color_temperature_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_color_temperature_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorTemperature, _properties_constraints.color_temperature);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_color_space_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_color_space_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ColorSpace, _properties_constraints.color_space);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_drive_mode_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_drive_mode_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_DriveMode, _properties_constraints.drive_mode);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_metering_mode_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_metering_mode_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_MeteringMode, _properties_constraints.metering_mode);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_iso_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_iso_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ISOSpeed, _properties_constraints.iso);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_av_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_av_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Av, _properties_constraints.av);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_tv_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_tv_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_Tv, _properties_constraints.tv);
     }
 
-    std::vector<std::string> EDSDK::Camera::get_exposure_compensation_constraints() const {
+    std::vector<std::string> EDSDK::Camera::get_exposure_compensation_constraints() {
+        std::lock_guard _{_properties_constraints.mutex};
         return EDSDK::explain_prop_value(kEdsPropID_ExposureCompensation, _properties_constraints.exposure_compensation);
     }
 
 
-    bool EDSDK::Camera::set_white_balance(std::uint32_t index_in_constraints) {
-        return _set_property(kEdsPropID_WhiteBalance,
-                             &_properties.white_balance,
-                             _properties_constraints.white_balance,
-                             index_in_constraints);
+    void EDSDK::Camera::set_white_balance(std::uint32_t index_in_constraints) {
+        std::lock_guard _{_properties_constraints.mutex};
+        std::uint32_t value = (index_in_constraints >= _properties_constraints.white_balance.size()) ?
+                              UINT32_MAX :
+                              _properties_constraints.white_balance[index_in_constraints];
+
+        _command_queue.push(new EDSDK::Camera::CommandSetProperty{kEdsPropID_WhiteBalance, value});
     }
 
-    bool EDSDK::Camera::set_color_temperature(std::uint32_t index_in_constraints) {
-        return _set_property(kEdsPropID_ColorTemperature,
-                             &_properties.color_temperature,
-                             _properties_constraints.color_temperature,
-                             index_in_constraints);
+    void EDSDK::Camera::set_color_temperature(std::uint32_t index_in_constraints) {
+        std::lock_guard _{_properties_constraints.mutex};
+        std::uint32_t value = (index_in_constraints >= _properties_constraints.color_temperature.size()) ?
+                              UINT32_MAX :
+                              _properties_constraints.color_temperature[index_in_constraints];
+
+        _command_queue.push(new EDSDK::Camera::CommandSetProperty{kEdsPropID_ColorTemperature, value});
     }
 
-    bool EDSDK::Camera::set_color_space(std::uint32_t index_in_constraints) {
-        return _set_property(kEdsPropID_ColorSpace,
-                             &_properties.color_space,
-                             _properties_constraints.color_space,
-                             index_in_constraints);
+    void EDSDK::Camera::set_color_space(std::uint32_t index_in_constraints) {
+        std::lock_guard _{_properties_constraints.mutex};
+        std::uint32_t value = (index_in_constraints >= _properties_constraints.color_space.size()) ?
+                              UINT32_MAX :
+                              _properties_constraints.color_space[index_in_constraints];
+
+        _command_queue.push(new EDSDK::Camera::CommandSetProperty{kEdsPropID_ColorSpace, value});
     }
 
-    bool EDSDK::Camera::set_drive_mode(std::uint32_t index_in_constraints) {
-        return _set_property(kEdsPropID_DriveMode,
-                             &_properties.drive_mode,
-                             _properties_constraints.drive_mode,
-                             index_in_constraints);
+    void EDSDK::Camera::set_drive_mode(std::uint32_t index_in_constraints) {
+        std::lock_guard _{_properties_constraints.mutex};
+        std::uint32_t value = (index_in_constraints >= _properties_constraints.drive_mode.size()) ?
+                              UINT32_MAX :
+                              _properties_constraints.drive_mode[index_in_constraints];
+
+        _command_queue.push(new EDSDK::Camera::CommandSetProperty{kEdsPropID_DriveMode, value});
     }
 
-    bool EDSDK::Camera::set_metering_mode(std::uint32_t index_in_constraints) {
-        return _set_property(kEdsPropID_MeteringMode,
-                             &_properties.metering_mode,
-                             _properties_constraints.metering_mode,
-                             index_in_constraints);
+    void EDSDK::Camera::set_metering_mode(std::uint32_t index_in_constraints) {
+        std::lock_guard _{_properties_constraints.mutex};
+        std::uint32_t value = (index_in_constraints >= _properties_constraints.metering_mode.size()) ?
+                              UINT32_MAX :
+                              _properties_constraints.metering_mode[index_in_constraints];
+
+        _command_queue.push(new EDSDK::Camera::CommandSetProperty{kEdsPropID_MeteringMode, value});
     }
 
-    bool EDSDK::Camera::set_iso(std::uint32_t index_in_constraints) {
-        return _set_property(kEdsPropID_ISOSpeed,
-                             &_properties.iso,
-                             _properties_constraints.iso,
-                             index_in_constraints);
+    void EDSDK::Camera::set_iso(std::uint32_t index_in_constraints) {
+        std::lock_guard _{_properties_constraints.mutex};
+        std::uint32_t value = (index_in_constraints >= _properties_constraints.iso.size()) ?
+                              UINT32_MAX :
+                              _properties_constraints.iso[index_in_constraints];
+
+        _command_queue.push(new EDSDK::Camera::CommandSetProperty{kEdsPropID_ISOSpeed, value});
     }
 
-    bool EDSDK::Camera::set_av(std::uint32_t index_in_constraints) {
-        return _set_property(kEdsPropID_Av,
-                             &_properties.av,
-                             _properties_constraints.av,
-                             index_in_constraints);
+    void EDSDK::Camera::set_av(std::uint32_t index_in_constraints) {
+        std::lock_guard _{_properties_constraints.mutex};
+        std::uint32_t value = (index_in_constraints >= _properties_constraints.av.size()) ?
+                              UINT32_MAX :
+                              _properties_constraints.av[index_in_constraints];
+
+        _command_queue.push(new EDSDK::Camera::CommandSetProperty{kEdsPropID_Av, value});
     }
 
-    bool EDSDK::Camera::set_tv(std::uint32_t index_in_constraints) {
-        return _set_property(kEdsPropID_Tv,
-                             &_properties.tv,
-                             _properties_constraints.tv,
-                             index_in_constraints);
+    void EDSDK::Camera::set_tv(std::uint32_t index_in_constraints) {
+        std::lock_guard _{_properties_constraints.mutex};
+        std::uint32_t value = (index_in_constraints >= _properties_constraints.tv.size()) ?
+                              UINT32_MAX :
+                              _properties_constraints.tv[index_in_constraints];
+
+        _command_queue.push(new EDSDK::Camera::CommandSetProperty{kEdsPropID_Tv, value});
     }
 
-    bool EDSDK::Camera::set_exposure_compensation(std::uint32_t index_in_constraints) {
-        return _set_property(kEdsPropID_ExposureCompensation,
-                             &_properties.exposure_compensation,
-                             _properties_constraints.exposure_compensation,
-                             index_in_constraints);
-    }
+    void EDSDK::Camera::set_exposure_compensation(std::uint32_t index_in_constraints) {
+        std::lock_guard _{_properties_constraints.mutex};
+        std::uint32_t value = (index_in_constraints >= _properties_constraints.exposure_compensation.size()) ?
+                              UINT32_MAX :
+                              _properties_constraints.exposure_compensation[index_in_constraints];
 
-    inline bool EDSDK::Camera::_shutter_button_command(EdsInt32 param) {
-        return EdsSendCommand(_camera_ref,
-                              kEdsCameraCommand_PressShutterButton,
-                              param) == EDS_ERR_OK;
+        _command_queue.push(new EDSDK::Camera::CommandSetProperty{kEdsPropID_ExposureCompensation, value});
     }
 
     template <typename T>
@@ -811,8 +1042,6 @@ namespace edsdk_w {
     }
 
     std::vector<std::uint32_t> EDSDK::Camera::_retrieve_property_constraints(EdsUInt32 prop_id) {
-
-
         EdsError err = EDS_ERR_OK;
         EdsPropertyDesc desc;
         std::vector<std::uint32_t> res{};
@@ -827,27 +1056,29 @@ namespace edsdk_w {
         return res;
     }
 
-    bool EDSDK::Camera::_set_property(EdsUInt32 prop_id,
-                                      std::uint32_t *prop_ptr,
-                                      const std::vector<std::uint32_t> &constraints,
-                                      std::uint32_t value_index) {
-        if (value_index >= constraints.size()) return false;
+    void EDSDK::Camera::_command_dispatcher() {
+        CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
-        EdsError err;
-        EdsDataType dataType;
-        EdsUInt32 dataSize;
+        if (EdsOpenSession(_camera_ref) == EDS_ERR_OK) {
+            _explicit_session_opened = true;
+        }
 
-        err = EdsGetPropertySize(_camera_ref, prop_id, 0, &dataType, &dataSize);
-        if (err == EDS_ERR_OK) {
-            err = EdsSetPropertyData(_camera_ref, prop_id, 0, dataSize, &constraints[value_index]);
-            if (err == EDS_ERR_OK) {
-                *prop_ptr = constraints[value_index];
+        while(!_stop_thread) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+            if (!_command_queue.empty()) {
+                auto tmp = _command_queue.pop().value();
+                tmp->dispatch(this);
+                delete tmp;
             }
         }
 
-        return err == EDS_ERR_OK;
-    }
+        if (EdsCloseSession(_camera_ref) == EDS_ERR_OK) {
+            _explicit_session_opened = false;
+        }
 
+        CoUninitialize();
+    }
 
 } //namespace edsdk_w
 

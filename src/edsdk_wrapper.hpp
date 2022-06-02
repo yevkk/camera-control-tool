@@ -5,79 +5,111 @@
 #include <vector>
 #include <optional>
 #include <functional>
+#include <queue>
+#include <atomic>
+#include <mutex>
+#include <thread>
 #include "EDSDKTypes.h"
 
 namespace edsdk_w {
+    namespace utils {
+        template<typename T>
+        class Queue {
+        public:
+            Queue() = default;
+            Queue(const Queue<T> &) = delete ;
+            Queue& operator=(const Queue<T> &) = delete ;
+
+            Queue(Queue<T>&& other) noexcept;
+
+            [[nodiscard]] bool empty();
+
+            [[nodiscard]] std::uint32_t size();
+
+            std::optional<T> pop();
+
+            void push(const T &item);
+
+        private:
+            std::queue<T> _queue;
+            std::mutex _mutex;
+        };
+    } //namespace utils
+
     class EDSDK {
     public:
         class Camera {
+        private:
+            class Command;
+            class CommandSetProperty;
+            class CommandSetState;
+            class CommandShutterControl;
+            class CommandSessionControl;
         public:
-            bool shutter_button();
-            bool shutter_button_press();
-            bool shutter_button_press_halfway();
-            bool shutter_button_release();
+            void shutter_button();
+            void shutter_button_press();
+            void shutter_button_press_halfway();
+            void shutter_button_release();
 
             bool update_shutdown_timer();
 
-            bool open_session();
-            bool close_session();
+            void open_session();
+            void close_session();
 
-            [[nodiscard]] std::string get_name() const;
-            [[nodiscard]] std::string get_current_storage() const;
-            [[nodiscard]] std::string get_body_id() const;
-            [[nodiscard]] std::string get_firmware_version() const;
+            void lock_ui();
+            void unlock_ui();
 
-            [[nodiscard]] std::string get_image_quality() const;
-            [[nodiscard]] std::string get_ae_mode() const;
-            [[nodiscard]] std::string get_af_mode() const;
-            [[nodiscard]] std::string get_lens_name() const;
+            [[nodiscard]] std::string get_name();
+            [[nodiscard]] std::string get_current_storage();
+            [[nodiscard]] std::string get_body_id();
+            [[nodiscard]] std::string get_firmware_version();
 
-            [[nodiscard]] std::string get_white_balance() const;
-            [[nodiscard]] std::string get_color_temperature() const;
-            [[nodiscard]] std::string get_color_space() const;
-            [[nodiscard]] std::string get_drive_mode() const;
-            [[nodiscard]] std::string get_metering_mode() const;
-            [[nodiscard]] std::string get_iso() const;
-            [[nodiscard]] std::string get_av() const;
-            [[nodiscard]] std::string get_tv() const;
-            [[nodiscard]] std::string get_exposure_compensation() const;
+            [[nodiscard]] std::string get_image_quality();
+            [[nodiscard]] std::string get_ae_mode();
+            [[nodiscard]] std::string get_af_mode();
+            [[nodiscard]] std::string get_lens_name();
 
-            [[nodiscard]] std::vector<std::string> get_white_balance_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_color_temperature_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_color_space_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_drive_mode_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_metering_mode_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_iso_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_av_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_tv_constraints() const;
-            [[nodiscard]] std::vector<std::string> get_exposure_compensation_constraints() const;
+            [[nodiscard]] std::string get_white_balance();
+            [[nodiscard]] std::string get_color_temperature();
+            [[nodiscard]] std::string get_color_space();
+            [[nodiscard]] std::string get_drive_mode();
+            [[nodiscard]] std::string get_metering_mode();
+            [[nodiscard]] std::string get_iso();
+            [[nodiscard]] std::string get_av();
+            [[nodiscard]] std::string get_tv();
+            [[nodiscard]] std::string get_exposure_compensation();
 
-            bool set_white_balance(std::uint32_t index_in_constraints);
-            bool set_color_temperature(std::uint32_t index_in_constraints);
-            bool set_color_space(std::uint32_t index_in_constraints);
-            bool set_drive_mode(std::uint32_t index_in_constraints);
-            bool set_metering_mode(std::uint32_t index_in_constraints);
-            bool set_iso(std::uint32_t index_in_constraints);
-            bool set_av(std::uint32_t index_in_constraints);
-            bool set_tv(std::uint32_t index_in_constraints);
-            bool set_exposure_compensation(std::uint32_t index_in_constraints);
+            [[nodiscard]] std::vector<std::string> get_white_balance_constraints();
+            [[nodiscard]] std::vector<std::string> get_color_temperature_constraints();
+            [[nodiscard]] std::vector<std::string> get_color_space_constraints();
+            [[nodiscard]] std::vector<std::string> get_drive_mode_constraints();
+            [[nodiscard]] std::vector<std::string> get_metering_mode_constraints();
+            [[nodiscard]] std::vector<std::string> get_iso_constraints();
+            [[nodiscard]] std::vector<std::string> get_av_constraints();
+            [[nodiscard]] std::vector<std::string> get_tv_constraints();
+            [[nodiscard]] std::vector<std::string> get_exposure_compensation_constraints();
+
+            void set_white_balance(std::uint32_t index_in_constraints);
+            void set_color_temperature(std::uint32_t index_in_constraints);
+            void set_color_space(std::uint32_t index_in_constraints);
+            void set_drive_mode(std::uint32_t index_in_constraints);
+            void set_metering_mode(std::uint32_t index_in_constraints);
+            void set_iso(std::uint32_t index_in_constraints);
+            void set_av(std::uint32_t index_in_constraints);
+            void set_tv(std::uint32_t index_in_constraints);
+            void set_exposure_compensation(std::uint32_t index_in_constraints);
 
         private:
              explicit Camera(EdsCameraRef camera);
 
             ~Camera();
 
-            inline bool _shutter_button_command(EdsInt32 param);
-
             template <typename T>
             T _retrieve_property(EdsUInt32 prop_id);
 
             std::vector<std::uint32_t> _retrieve_property_constraints(EdsUInt32 prop_id);
 
-            bool _set_property(EdsUInt32 prop_id,
-                               std::uint32_t *prop_ptr,
-                               const std::vector<std::uint32_t> &constraints,
-                               std::uint32_t value_index);
+            void _command_dispatcher();
 
             struct {
                 //immutable
@@ -102,6 +134,8 @@ namespace edsdk_w {
                 std::uint32_t av;
                 std::uint32_t tv;
                 std::uint32_t exposure_compensation;
+
+                std::mutex mutex;
             } _properties;
 
             struct {
@@ -114,10 +148,16 @@ namespace edsdk_w {
                 std::vector<std::uint32_t> av;
                 std::vector<std::uint32_t> tv;
                 std::vector<std::uint32_t> exposure_compensation;
+
+                std::mutex mutex;
             } _properties_constraints;
 
             EdsCameraRef _camera_ref;
-            bool _explicit_session_opened;
+            std::atomic_bool _explicit_session_opened;
+            utils::Queue<Command*> _command_queue;
+
+            std::atomic_bool _stop_thread;
+            std::thread _dispatcher_thread;
 
             friend EDSDK;
         };
