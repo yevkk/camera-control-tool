@@ -449,10 +449,13 @@ namespace edsdk_w {
         EdsError err = EDS_ERR_OK;
         EdsCameraListRef cameraList = nullptr;
         EdsCameraRef camera_ref = nullptr;
+        EdsUInt32 count = 0;
 
         err = EdsGetCameraList(&cameraList);
 
         if (err == EDS_ERR_OK) {
+            err = EdsGetChildCount(cameraList, &count);
+            if (index_in_list + 1 > count) return false;
             err = EdsGetChildAtIndex(cameraList, index_in_list, &camera_ref);
             if (err == EDS_ERR_OK) {
                 _camera = new Camera(camera_ref);
@@ -525,7 +528,6 @@ namespace edsdk_w {
 
     EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false} {
         open_session();
-
         _properties.name = _retrieve_property<std::string>(kEdsPropID_ProductName);
         _properties.current_storage = _retrieve_property<std::string>(kEdsPropID_CurrentStorage);
         _properties.body_id = _retrieve_property<std::string>(kEdsPropID_BodyIDEx);
@@ -555,6 +557,8 @@ namespace edsdk_w {
         _properties_constraints.av = _retrieve_property_constraints(kEdsPropID_Av);
         _properties_constraints.tv = _retrieve_property_constraints(kEdsPropID_Tv);
         _properties_constraints.exposure_compensation = _retrieve_property_constraints(kEdsPropID_ExposureCompensation);
+
+        EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UIUnLock, 0);
     }
 
     EDSDK::Camera::~Camera()  {
