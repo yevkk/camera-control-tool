@@ -17,10 +17,11 @@ namespace edsdk_w {
             bool shutter_button_press_halfway();
             bool shutter_button_release(bool close_session = true);
 
-            bool update_shutdown_timer();
-
             bool open_session();
             bool close_session();
+
+            bool lock_ui();
+            bool unlock_ui();
 
             [[nodiscard]] std::string get_name() const;
             [[nodiscard]] std::string get_current_storage() const;
@@ -52,19 +53,17 @@ namespace edsdk_w {
             [[nodiscard]] std::vector<std::string> get_tv_constraints() const;
             [[nodiscard]] std::vector<std::string> get_exposure_compensation_constraints() const;
 
-            bool set_white_balance(std::uint32_t index_in_constraints, bool open_session = true);
-            bool set_color_temperature(std::uint32_t index_in_constraints, bool open_session = true);
-            bool set_color_space(std::uint32_t index_in_constraints, bool open_session = true);
-            bool set_drive_mode(std::uint32_t index_in_constraints, bool open_session = true);
-            bool set_metering_mode(std::uint32_t index_in_constraints, bool open_session = true);
-            bool set_iso(std::uint32_t index_in_constraints, bool open_session = true);
-            bool set_av(std::uint32_t index_in_constraints, bool open_session = true);
-            bool set_tv(std::uint32_t index_in_constraints, bool open_session = true);
-            bool set_exposure_compensation(std::uint32_t index_in_constraints, bool open_session = true);
+            bool set_white_balance(std::uint32_t index_in_constraints);
+            bool set_color_temperature(std::uint32_t index_in_constraints);
+            bool set_color_space(std::uint32_t index_in_constraints);
+            bool set_drive_mode(std::uint32_t index_in_constraints);
+            bool set_metering_mode(std::uint32_t index_in_constraints);
+            bool set_iso(std::uint32_t index_in_constraints);
+            bool set_av(std::uint32_t index_in_constraints);
+            bool set_tv(std::uint32_t index_in_constraints);
+            bool set_exposure_compensation(std::uint32_t index_in_constraints);
 
         private:
-            class SessionRAII;
-
             explicit Camera(EdsCameraRef camera);
 
             ~Camera();
@@ -72,15 +71,32 @@ namespace edsdk_w {
             inline bool _shutter_button_command(EdsInt32 param);
 
             template <typename T>
-            T _retrieve_property(EdsUInt32 prop_id, bool open_session = true);
+            T _retrieve_property(EdsUInt32 prop_id);
 
-            std::vector<std::uint32_t> _retrieve_property_constraints(EdsUInt32 prop_id, bool open_session = true);
+            std::vector<std::uint32_t> _retrieve_property_constraints(EdsUInt32 prop_id);
 
             bool _set_property(EdsUInt32 prop_id,
                                std::uint32_t *prop_ptr,
                                const std::vector<std::uint32_t> &constraints,
-                               std::uint32_t value_index,
-                               bool open_session = true);
+                               std::uint32_t value_index);
+
+            static EdsError EDSCALLBACK _property_changed_callback(EdsPropertyEvent event,
+                                                                   EdsPropertyID prop_id,
+                                                                   EdsUInt32 param,
+                                                                   EdsVoid *ctx);
+
+            static EdsError EDSCALLBACK _property_desc_changed_callback(EdsPropertyEvent event,
+                                                                   EdsPropertyID prop_id,
+                                                                   EdsUInt32 param,
+                                                                   EdsVoid *ctx);
+
+            static EdsError EDSCALLBACK _shutdown_notification_callback(EdsPropertyEvent event,
+                                                                        EdsUInt32 param,
+                                                                        EdsVoid *ctx);
+
+            static EdsError EDSCALLBACK _capture_failure_callback(EdsPropertyEvent event,
+                                                                        EdsUInt32 param,
+                                                                        EdsVoid *ctx);
 
             struct {
                 //immutable
@@ -139,6 +155,8 @@ namespace edsdk_w {
 
         bool reset_camera();
 
+        static void events();
+
         static std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
 
         static std::vector<std::string> explain_prop_value(std::uint32_t prop_id, const std::vector<std::uint32_t> &value);
@@ -147,11 +165,15 @@ namespace edsdk_w {
         EDSDK();
         ~EDSDK();
 
+        static EdsError EDSCALLBACK _camera_disconnection_callback(EdsStateEvent event,
+                                                                   EdsUInt32 param,
+                                                                   EdsVoid *ctx);
+
         Camera *_camera;
     };
 
     template <>
-    std::string EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id, bool open_session);
+    std::string EDSDK::Camera::_retrieve_property(EdsUInt32 prop_id);
 
 } //namespace edsdk_w
 
