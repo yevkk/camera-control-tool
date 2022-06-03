@@ -459,6 +459,11 @@ namespace edsdk_w {
             err = EdsGetChildAtIndex(cameraList, index_in_list, &camera_ref);
             if (err == EDS_ERR_OK) {
                 _camera = new Camera(camera_ref);
+
+                EdsSetCameraStateEventHandler(camera_ref,
+                                              kEdsStateEvent_Shutdown,
+                                              EDSDK::_camera_disconnection_callback,
+                                              this);
             }
         }
 
@@ -524,6 +529,14 @@ namespace edsdk_w {
         }
 
         return res;
+    }
+
+    EdsError EDSCALLBACK EDSDK::_camera_disconnection_callback(EdsStateEvent event,
+                                                               EdsUInt32 param,
+                                                               EdsVoid *ctx) {
+        auto eds = static_cast<EDSDK*>(ctx);
+        std::cout << "CAMERA DISCONNECTED\n";
+        return eds->reset_camera();
     }
 
     EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false} {
@@ -958,18 +971,19 @@ namespace edsdk_w {
         return EDS_ERR_OK;
     }
 
-    EdsError EDSCALLBACK EDSDK::Camera::_shutdown_notification_callback(EdsPropertyEvent event,
+    EdsError EDSCALLBACK EDSDK::Camera::_shutdown_notification_callback(EdsStateEvent,
                                                                 EdsUInt32 param,
                                                                 EdsVoid *ctx) {
         auto camera = static_cast<EDSDK::Camera*>(ctx);
         return EdsSendCommand(camera->_camera_ref, kEdsCameraCommand_ExtendShutDownTimer, 0) == EDS_ERR_OK;
     }
 
-    EdsError EDSCALLBACK EDSDK::Camera::_capture_failure_callback(EdsPropertyEvent event,
+    EdsError EDSCALLBACK EDSDK::Camera::_capture_failure_callback(EdsStateEvent event,
                                                           EdsUInt32 param,
                                                           EdsVoid *ctx) {
         auto camera = static_cast<EDSDK::Camera*>(ctx);
         //TODO: implement some logic, logging mb
+        return EDS_ERR_OK;
     }
 
 } //namespace edsdk_w

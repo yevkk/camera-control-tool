@@ -160,6 +160,10 @@ namespace edsdk_w {
         EDSDK();
         ~EDSDK();
 
+        static EdsError EDSCALLBACK _camera_disconnection_callback(EdsStateEvent event,
+                                                                   EdsUInt32 param,
+                                                                   EdsVoid *ctx);
+
         Camera *_camera;
     };
 
