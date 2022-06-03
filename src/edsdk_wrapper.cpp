@@ -489,6 +489,10 @@ namespace edsdk_w {
         return true;
     }
 
+    void EDSDK::events() {
+        EdsGetEvent();
+    }
+
     std::string EDSDK::explain_prop_value(std::uint32_t prop_id, std::uint32_t value) {
         switch (prop_id) {
             case kEdsPropID_ImageQuality:

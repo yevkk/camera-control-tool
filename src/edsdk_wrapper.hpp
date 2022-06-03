@@ -155,6 +155,8 @@ namespace edsdk_w {
 
         bool reset_camera();
 
+        static void events();
+
         static std::string explain_prop_value(std::uint32_t prop_id, std::uint32_t value);
 
         static std::vector<std::string> explain_prop_value(std::uint32_t prop_id, const std::vector<std::uint32_t> &value);
