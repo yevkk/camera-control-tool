@@ -20,6 +20,9 @@ namespace edsdk_w {
             bool open_session();
             bool close_session();
 
+            bool lock_ui();
+            bool unlock_ui();
+
             [[nodiscard]] std::string get_name() const;
             [[nodiscard]] std::string get_current_storage() const;
             [[nodiscard]] std::string get_body_id() const;

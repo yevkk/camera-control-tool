@@ -595,7 +595,7 @@ namespace edsdk_w {
                                       this);
 
         //unlocking ui
-        EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UIUnLock, 0);
+        unlock_ui();
     }
 
     EDSDK::Camera::~Camera()  {
@@ -637,6 +637,14 @@ namespace edsdk_w {
 
         _explicit_session_opened = (EdsCloseSession(_camera_ref) != EDS_ERR_OK);
         return !_explicit_session_opened;
+    }
+
+    bool EDSDK::Camera::lock_ui() {
+        EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UILock, 0);
+    }
+
+    bool EDSDK::Camera::unlock_ui() {
+        EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UIUnLock, 0);
     }
 
     std::string EDSDK::Camera::get_name() const {
