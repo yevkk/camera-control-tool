@@ -528,6 +528,8 @@ namespace edsdk_w {
 
     EDSDK::Camera::Camera(EdsCameraRef camera) : _camera_ref{camera}, _explicit_session_opened{false} {
         open_session();
+
+        //loading initial properties values
         _properties.name = _retrieve_property<std::string>(kEdsPropID_ProductName);
         _properties.current_storage = _retrieve_property<std::string>(kEdsPropID_CurrentStorage);
         _properties.body_id = _retrieve_property<std::string>(kEdsPropID_BodyIDEx);
@@ -558,6 +560,13 @@ namespace edsdk_w {
         _properties_constraints.tv = _retrieve_property_constraints(kEdsPropID_Tv);
         _properties_constraints.exposure_compensation = _retrieve_property_constraints(kEdsPropID_ExposureCompensation);
 
+        //setting callbacks
+        EdsSetPropertyEventHandler(_camera_ref,
+                                   kEdsPropertyEvent_PropertyChanged,
+                                   EDSDK::Camera::_property_changed_callback,
+                                   this);
+
+        //unlocking ui
         EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UIUnLock, 0);
     }
 
@@ -846,6 +855,58 @@ namespace edsdk_w {
         }
 
         return err == EDS_ERR_OK;
+    }
+
+
+    EdsError EDSCALLBACK EDSDK::Camera::_property_changed_callback(EdsPropertyEvent event,
+                                                                   EdsPropertyID prop_id,
+                                                                   EdsUInt32 param,
+                                                                   EdsVoid *ctx) {
+        auto camera = static_cast<EDSDK::Camera*>(ctx);
+        switch (prop_id) {
+            case kEdsPropID_WhiteBalance:
+                camera->_properties.white_balance = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_ColorTemperature:
+                camera->_properties.color_temperature = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_ColorSpace:
+                camera->_properties.color_space = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_DriveMode:
+                camera->_properties.drive_mode = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_MeteringMode:
+                camera->_properties.metering_mode = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_ISOSpeed:
+                camera->_properties.iso = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_Av:
+                camera->_properties.av = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_Tv:
+                camera->_properties.tv = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_ExposureCompensation:
+                camera->_properties.exposure_compensation = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_ImageQuality:
+                camera->_properties.image_quality = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_AEMode:
+                camera->_properties.ae_mode = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_AFMode:
+                camera->_properties.af_mode = camera->_retrieve_property<std::uint32_t>(prop_id);
+                break;
+            case kEdsPropID_LensStatus:
+                camera->_properties.lens_name = camera->_retrieve_property<std::string>(kEdsPropID_LensName);
+                break;
+            default:
+                return EDS_ERR_INVALID_PARAMETER;
+        }
+        return EDS_ERR_OK;
     }
 
 

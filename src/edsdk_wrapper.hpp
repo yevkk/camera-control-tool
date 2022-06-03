@@ -79,6 +79,11 @@ namespace edsdk_w {
                                const std::vector<std::uint32_t> &constraints,
                                std::uint32_t value_index);
 
+            static EdsError EDSCALLBACK _property_changed_callback(EdsPropertyEvent event,
+                                                                   EdsPropertyID prop_id,
+                                                                   EdsUInt32 param,
+                                                                   EdsVoid *ctx);
+
             struct {
                 //immutable
                 std::string name;
