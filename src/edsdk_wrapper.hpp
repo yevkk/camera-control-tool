@@ -84,6 +84,11 @@ namespace edsdk_w {
                                                                    EdsUInt32 param,
                                                                    EdsVoid *ctx);
 
+            static EdsError EDSCALLBACK _property_desc_changed_callback(EdsPropertyEvent event,
+                                                                   EdsPropertyID prop_id,
+                                                                   EdsUInt32 param,
+                                                                   EdsVoid *ctx);
+
             struct {
                 //immutable
                 std::string name;

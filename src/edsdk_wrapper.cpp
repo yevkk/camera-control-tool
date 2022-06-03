@@ -566,6 +566,11 @@ namespace edsdk_w {
                                    EDSDK::Camera::_property_changed_callback,
                                    this);
 
+        EdsSetPropertyEventHandler(_camera_ref,
+                                   kEdsPropertyEvent_PropertyDescChanged,
+                                   EDSDK::Camera::_property_desc_changed_callback,
+                                   this);
+
         //unlocking ui
         EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UIUnLock, 0);
     }
@@ -909,6 +914,45 @@ namespace edsdk_w {
         return EDS_ERR_OK;
     }
 
+    EdsError EDSCALLBACK EDSDK::Camera::_property_desc_changed_callback(EdsPropertyEvent event,
+                                                                   EdsPropertyID prop_id,
+                                                                   EdsUInt32 param,
+                                                                   EdsVoid *ctx) {
+        auto camera = static_cast<EDSDK::Camera*>(ctx);
+        std::vector<std::uint32_t> constraints = camera->_retrieve_property_constraints(prop_id);
+        switch (prop_id) {
+            case kEdsPropID_WhiteBalance:
+                camera->_properties_constraints.white_balance = std::move(constraints);
+                break;
+            case kEdsPropID_ColorTemperature:
+                camera->_properties_constraints.color_temperature = std::move(constraints);
+                break;
+            case kEdsPropID_ColorSpace:
+                camera->_properties_constraints.color_space = std::move(constraints);
+                break;
+            case kEdsPropID_DriveMode:
+                camera->_properties_constraints.drive_mode = std::move(constraints);
+                break;
+            case kEdsPropID_MeteringMode:
+                camera->_properties_constraints.metering_mode = std::move(constraints);
+                break;
+            case kEdsPropID_ISOSpeed:
+                camera->_properties_constraints.iso = std::move(constraints);
+                break;
+            case kEdsPropID_Av:
+                camera->_properties_constraints.av = std::move(constraints);
+                break;
+            case kEdsPropID_Tv:
+                camera->_properties_constraints.tv = std::move(constraints);
+                break;
+            case kEdsPropID_ExposureCompensation:
+                camera->_properties_constraints.exposure_compensation = std::move(constraints);
+                break;
+            default:
+                return EDS_ERR_INVALID_PARAMETER;
+        }
+        return EDS_ERR_OK;
+    }
 
 } //namespace edsdk_w
 
