@@ -17,8 +17,6 @@ namespace edsdk_w {
             bool shutter_button_press_halfway();
             bool shutter_button_release(bool close_session = true);
 
-            bool update_shutdown_timer();
-
             bool open_session();
             bool close_session();
 
@@ -88,6 +86,14 @@ namespace edsdk_w {
                                                                    EdsPropertyID prop_id,
                                                                    EdsUInt32 param,
                                                                    EdsVoid *ctx);
+
+            static EdsError EDSCALLBACK _shutdown_notification_callback(EdsPropertyEvent event,
+                                                                        EdsUInt32 param,
+                                                                        EdsVoid *ctx);
+
+            static EdsError EDSCALLBACK _capture_failure_callback(EdsPropertyEvent event,
+                                                                        EdsUInt32 param,
+                                                                        EdsVoid *ctx);
 
             struct {
                 //immutable

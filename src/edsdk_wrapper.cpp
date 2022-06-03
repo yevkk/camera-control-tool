@@ -571,6 +571,16 @@ namespace edsdk_w {
                                    EDSDK::Camera::_property_desc_changed_callback,
                                    this);
 
+       EdsSetCameraStateEventHandler(_camera_ref,
+                                     kEdsStateEvent_Shutdown,
+                                     EDSDK::Camera::_shutdown_notification_callback,
+                                     this);
+
+        EdsSetCameraStateEventHandler(_camera_ref,
+                                      kEdsStateEvent_CaptureError,
+                                      EDSDK::Camera::_capture_failure_callback,
+                                      this);
+
         //unlocking ui
         EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UIUnLock, 0);
     }
@@ -596,12 +606,6 @@ namespace edsdk_w {
 
     bool EDSDK::Camera::shutter_button_release(bool close_session) {
         return _shutter_button_command(kEdsCameraCommand_ShutterButton_OFF);
-    }
-
-    bool EDSDK::Camera::update_shutdown_timer() {
-        return EdsSendCommand(_camera_ref,
-                              kEdsCameraCommand_ExtendShutDownTimer,
-                              0) == EDS_ERR_OK;
     }
 
     bool EDSDK::Camera::open_session() {
@@ -952,6 +956,20 @@ namespace edsdk_w {
                 return EDS_ERR_INVALID_PARAMETER;
         }
         return EDS_ERR_OK;
+    }
+
+    EdsError EDSCALLBACK EDSDK::Camera::_shutdown_notification_callback(EdsPropertyEvent event,
+                                                                EdsUInt32 param,
+                                                                EdsVoid *ctx) {
+        auto camera = static_cast<EDSDK::Camera*>(ctx);
+        return EdsSendCommand(camera->_camera_ref, kEdsCameraCommand_ExtendShutDownTimer, 0) == EDS_ERR_OK;
+    }
+
+    EdsError EDSCALLBACK EDSDK::Camera::_capture_failure_callback(EdsPropertyEvent event,
+                                                          EdsUInt32 param,
+                                                          EdsVoid *ctx) {
+        auto camera = static_cast<EDSDK::Camera*>(ctx);
+        //TODO: implement some logic, logging mb
     }
 
 } //namespace edsdk_w
