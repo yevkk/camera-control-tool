@@ -640,11 +640,11 @@ namespace edsdk_w {
     }
 
     bool EDSDK::Camera::lock_ui() {
-        EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UILock, 0);
+        return EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UILock, 0) == EDS_ERR_OK;
     }
 
     bool EDSDK::Camera::unlock_ui() {
-        EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UIUnLock, 0);
+        return EdsSendStatusCommand(_camera_ref, kEdsCameraStatusCommand_UIUnLock, 0) == EDS_ERR_OK;
     }
 
     std::string EDSDK::Camera::get_name() const {
