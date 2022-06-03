@@ -905,8 +905,8 @@ namespace edsdk_w {
             case kEdsPropID_AFMode:
                 camera->_properties.af_mode = camera->_retrieve_property<std::uint32_t>(prop_id);
                 break;
-            case kEdsPropID_LensStatus:
-                camera->_properties.lens_name = camera->_retrieve_property<std::string>(kEdsPropID_LensName);
+            case kEdsPropID_LensName:
+                camera->_properties.lens_name = camera->_retrieve_property<std::string>(prop_id);
                 break;
             default:
                 return EDS_ERR_INVALID_PARAMETER;
