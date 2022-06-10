@@ -3,7 +3,7 @@ project(edsdkw)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SRC_DIR ${CMAKE_SOURCE_DIR})
+set(SRC_DIR ${PROJECT_SOURCE_DIR})
 
 set(LIB_NAME ${PROJECT_NAME})
 
@@ -26,4 +26,4 @@ set(EDSDK_DLL_LIST
         ${EDSDK_LIB_DIR}/EDSDK.dll
         ${EDSDK_LIB_DIR}/EdsImage.dll
         )
-add_custom_command(TARGET ${LIB_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${EDSDK_DLL_LIST} ${CMAKE_BINARY_DIR})
+add_custom_command(TARGET ${LIB_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${EDSDK_DLL_LIST} ${PROJECT_BINARY_DIR})
