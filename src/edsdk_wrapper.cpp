@@ -398,13 +398,13 @@ namespace edsdk_w {
 
     EDSDK::EDSDK() : _camera{nullptr} {
         assert(EdsInitializeSDK() == EDS_ERR_OK && "EDSDK initialization error");
-        std::cout << "SDK Initialized" << std::endl; //TODO: remove console debug
+//        std::cout << "SDK Initialized" << std::endl; //TODO: remove console debug
     }
 
     EDSDK::~EDSDK() {
         reset_camera();
         assert(EdsTerminateSDK() == EDS_ERR_OK && "EDSDK termination error");
-        std::cout << "SDK terminated" << std::endl; //TODO: remove console debug
+//        std::cout << "SDK terminated" << std::endl; //TODO: remove console debug
     }
 
     std::vector<std::string> EDSDK::get_available_camera_list() {

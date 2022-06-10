@@ -152,7 +152,7 @@ namespace edsdk_w::cli {
                         } else if (args.size() == 4 && args[1] == "set") {
                             std::vector<std::string> value_list;
                             auto prop_arg = args[2];
-                            auto value_index = std::stoi(args[3]);
+                            auto value_index = std::stoi(args[3]) - 1;
 
                             if (prop_arg == "wb") {
                                 result = eds.get_camera().value().get().set_white_balance(value_index);
@@ -221,7 +221,7 @@ namespace edsdk_w::cli {
                                 std::cout << "No connected cameras\n";
                             } else {
                                 for (int i = 0 ; i < camera_list.size(); i++) {
-                                    std::cout << i << " - " << camera_list[i] << std::endl;
+                                    std::cout << i + 1 << " - " << camera_list[i] << std::endl;
                                 }
                             }
                         } else if (args.size() == 2 && args[1] == "reset") {
