@@ -268,7 +268,7 @@ namespace edsdk_w::cli {
                         std::cout << "\t- camera reset - reset current camera\n\n";
                         std::cout << "\t- exit - close application\n\n\n";
                         std::cout << "\t <property> argument for prop commands can be designated the following values: \n";
-                        std::cout << "\t get: camera | serial | firmware | storage | ae | af_mode | quality | lens \n";
+                        std::cout << "\t get: camera_name | serial | firmware | storage | ae | af_mode | quality | lens \n";
                         std::cout << "\t get | set | show: wb | temperature | color_space | drive_mode | metering_mode | av | tv | iso | exp_compensation \n";
                         break;
                     }
