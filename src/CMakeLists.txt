@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(edsdkw)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 set(SRC_DIR ${PROJECT_SOURCE_DIR})
 
@@ -14,10 +14,12 @@ set(EDSDK_LIB_DIR ${EDSDK_DIR}/lib)
 set(SRC_LIST
         edsdk_wrapper.hpp
         edsdk_wrapper.cpp
+        cli.hpp
         logger.hpp
         )
 
-add_library(${LIB_NAME} STATIC ${SRC_LIST})
+message(STATUS "CLI application")
+add_executable(${LIB_NAME} main.cpp ${CLI_SRC_LIST} ${SRC_LIST})
 
 target_include_directories(${LIB_NAME} PRIVATE ${EDSDK_HEADER_DIR})
 target_link_libraries(${LIB_NAME} PUBLIC ${EDSDK_LIB_DIR}/EDSDK.lib)
