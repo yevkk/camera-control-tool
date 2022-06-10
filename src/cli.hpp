@@ -31,6 +31,16 @@ namespace edsdk_w::cli {
             return args;
         };
 
+        static void print_values(const std::vector<std::string> &v) {
+            if (v.empty()) {
+                std::cout << "No available values\n";
+            } else {
+                for (int i = 0 ; i < v.size(); i++) {
+                    std::cout << i + 1 << " - " << v[i] << std::endl;
+                }
+            }
+        }
+
     public:
         CLI() = delete;
 
@@ -63,7 +73,113 @@ namespace edsdk_w::cli {
                 bool result;
                 switch (cmd) {
                     case Command::PROP: {
-                        // TODO: implement
+                        if (args.size() == 3 && args[1] == "get") {
+                            auto prop_arg = args[2];
+                            if (prop_arg == "camera_name") {
+                                std::cout << "Camera: " << eds.get_camera().value().get().get_name() << std::endl;
+                            } else if (prop_arg == "serial") {
+                                std::cout << "Serial: " << eds.get_camera().value().get().get_body_id() << std::endl;
+                            } else if (prop_arg == "firmware") {
+                                std::cout << "Firmware version: " << eds.get_camera().value().get().get_firmware_version() << std::endl;
+                            } else if (prop_arg == "storage") {
+                                std::cout << "Storage card type: " << eds.get_camera().value().get().get_current_storage() << std::endl;
+                            } else if (prop_arg == "ae") {
+                                std::cout << "AE: " << eds.get_camera().value().get().get_ae_mode() << std::endl;
+                            } else if (prop_arg == "quality") {
+                                std::cout << "Image quality: " << eds.get_camera().value().get().get_image_quality() << std::endl;
+                            } else if (prop_arg == "lens") {
+                                std::cout << "Lens: " << eds.get_camera().value().get().get_lens_name() << std::endl;
+                            } else if (prop_arg == "wb") {
+                                std::cout << "WB: " << eds.get_camera().value().get().get_white_balance() << std::endl;
+                            } else if (prop_arg == "temperature") {
+                                std::cout << "Color temperature: " << eds.get_camera().value().get().get_color_temperature() << std::endl;
+                            } else if (prop_arg == "color_space") {
+                                std::cout << "Color Space: " << eds.get_camera().value().get().get_color_space() << std::endl;
+                            } else if (prop_arg == "drive_mode") {
+                                std::cout << "Drive Mode: " << eds.get_camera().value().get().get_drive_mode() << std::endl;
+                            } else if (prop_arg == "metering_mode") {
+                                std::cout << "Metering Mode: " << eds.get_camera().value().get().get_metering_mode() << std::endl;
+                            } else if (prop_arg == "af_mode") {
+                                std::cout << "AF Mode: " << eds.get_camera().value().get().get_af_mode() << std::endl;
+                            } else if (prop_arg == "av") {
+                                std::cout << "Av: " << eds.get_camera().value().get().get_av() << std::endl;
+                            } else if (prop_arg == "tv") {
+                                std::cout << "Tv: " << eds.get_camera().value().get().get_tv() << std::endl;
+                            } else if (prop_arg == "iso") {
+                                std::cout << "ISO: " << eds.get_camera().value().get().get_iso() << std::endl;
+                            } else if (prop_arg == "exp_compensation") {
+                                std::cout << "Exposure Compensation: " << eds.get_camera().value().get().get_exposure_compensation() << std::endl;
+                            } else {
+                                std::cout << "error: unknown argument\n";
+                            }
+                        } else if (args.size() == 3 && args[1] == "show") {
+                            std::vector<std::string> value_list;
+                            auto prop_arg = args[2];
+
+                            if (prop_arg == "wb") {
+                                std::cout << "WB: ";
+                                value_list = eds.get_camera().value().get().get_white_balance_constraints();
+                            } else if (prop_arg == "temperature") {
+                                std::cout << "Color temperature:\n";
+                                value_list = eds.get_camera().value().get().get_color_temperature_constraints();
+                            } else if (prop_arg == "color_space") {
+                                std::cout << "Color Space:\n";
+                                value_list = eds.get_camera().value().get().get_color_space_constraints();
+                            } else if (prop_arg == "drive_mode") {
+                                std::cout << "Drive Mode:\n";
+                                value_list = eds.get_camera().value().get().get_drive_mode_constraints();
+                            } else if (prop_arg == "metering_mode") {
+                                std::cout << "Metering Mode:\n";
+                                value_list = eds.get_camera().value().get().get_metering_mode_constraints();
+                            } else if (prop_arg == "av") {
+                                std::cout << "Av:\n";
+                                value_list = eds.get_camera().value().get().get_av_constraints();
+                            } else if (prop_arg == "tv") {
+                                std::cout << "Tv:\n";
+                                value_list = eds.get_camera().value().get().get_tv_constraints();
+                            } else if (prop_arg == "iso") {
+                                std::cout << "ISO:\n";
+                                value_list = eds.get_camera().value().get().get_iso_constraints();
+                            } else if (prop_arg == "exp_compensation") {
+                                std::cout << "Exposure Compensation:\n";
+                                value_list = eds.get_camera().value().get().get_exposure_compensation_constraints();
+                            } else {
+                                std::cout << "error: unknown argument\n";
+                                break;
+                            }
+
+                            print_values(value_list);
+                        } else if (args.size() == 4 && args[1] == "set") {
+                            std::vector<std::string> value_list;
+                            auto prop_arg = args[2];
+                            auto value_index = std::stoi(args[3]);
+
+                            if (prop_arg == "wb") {
+                                result = eds.get_camera().value().get().set_white_balance(value_index);
+                            } else if (prop_arg == "temperature") {
+                                result = eds.get_camera().value().get().set_color_temperature(value_index);
+                            } else if (prop_arg == "color_space") {
+                                result = eds.get_camera().value().get().set_color_space(value_index);
+                            } else if (prop_arg == "drive_mode") {
+                                result = eds.get_camera().value().get().set_drive_mode(value_index);
+                            } else if (prop_arg == "metering_mode") {
+                                result = eds.get_camera().value().get().set_metering_mode(value_index);
+                            } else if (prop_arg == "av") {
+                                result = eds.get_camera().value().get().set_av(value_index);
+                            } else if (prop_arg == "tv") {
+                                result = eds.get_camera().value().get().set_tv(value_index);
+                            } else if (prop_arg == "iso") {
+                                result = eds.get_camera().value().get().set_iso(value_index);
+                            } else if (prop_arg == "exp_compensation") {
+                                result = eds.get_camera().value().get().set_exposure_compensation(value_index);
+                            } else {
+                                std::cout << "error: unknown argument\n";
+                                break;
+                            }
+                            std::cout << (result ? "value set successfully\n" : "failed to set value\n");
+                        } else {
+                            std::cout << "error: wrong number of arguments\n";
+                        }
                         break;
                     }
                     case Command::UI: {
@@ -132,8 +248,8 @@ namespace edsdk_w::cli {
                         std::cout << "\t- camera reset - reset current camera\n\n";
                         std::cout << "\t- exit - close application\n\n\n";
                         std::cout << "\t <property> argument for prop commands can be designated the following values: \n";
-                        std::cout << "\t get: camera | serial | firmware | storage | ae | quality | lens \n";
-                        std::cout << "\t get | set | show: wb | temperature | color_space | drive_mode | metering_mode | af_mode | av | tv | iso | exp_compensation \n";
+                        std::cout << "\t get: camera | serial | firmware | storage | ae | af_mode | quality | lens \n";
+                        std::cout << "\t get | set | show: wb | temperature | color_space | drive_mode | metering_mode | av | tv | iso | exp_compensation \n";
                         break;
                     }
                     case Command::EXIT: {
