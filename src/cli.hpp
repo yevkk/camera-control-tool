@@ -14,7 +14,7 @@ namespace edsdk_w::cli {
     class CLI {
     private:
         enum class Command {
-            PROP, UI, SESSION, CAMERA, EXIT, HELP
+            PROP, UI, SESSION, CAMERA, SHUTTER, EXIT, HELP
         };
 
         static const std::map<std::string, const Command> _commands_map;
@@ -214,6 +214,22 @@ namespace edsdk_w::cli {
                         }
                         break;
                     }
+                    case Command::SHUTTER: {
+                        if (args.size() == 1) {
+                            result = eds.get_camera().value().get().shutter_button();
+                        } else if (args.size() != 2) {
+                            std::cout << "error: wrong number of arguments\n";
+                            break;
+                        } else if (args[1] == "full") {
+                            result = eds.get_camera().value().get().shutter_button_press();
+                        } else if (args[1] == "half") {
+                            result = eds.get_camera().value().get().shutter_button_press_halfway();
+                        } else if (args[1] == "release") {
+                            result = eds.get_camera().value().get().shutter_button_release();
+                        }
+                        std::cout << (result ? "success\n" : "failed\n");
+                        break;
+                    }
                     case Command::CAMERA: {
                         if (args.size() == 2 && args[1] == "list") {
                             auto camera_list = eds.get_available_camera_list();
@@ -243,6 +259,10 @@ namespace edsdk_w::cli {
                         std::cout << "\t- ui unlock - unlock ui on current camera\n\n";
                         std::cout << "\t- session open - explicitly open session with current camera\n\n";
                         std::cout << "\t- session close - explicitly close session with current camera\n\n";
+                        std::cout << "\t- shutter - full press and release of shutter button\n\n";
+                        std::cout << "\t- shutter full - full press of shutter button\n\n";
+                        std::cout << "\t- shutter half - halfway press of shutter button\n\n";
+                        std::cout << "\t- shutter release - release of shutter button\n\n";
                         std::cout << "\t- camera list - print a list of cameras connected to the computer with corresponding indices\n\n";
                         std::cout << "\t- camera set <num> - set a current camera, <num> represents the index of camera in the list of connected cameras\n\n";
                         std::cout << "\t- camera reset - reset current camera\n\n";
@@ -268,6 +288,7 @@ namespace edsdk_w::cli {
             {"ui",      CLI::Command::UI},
             {"session", CLI::Command::SESSION},
             {"camera",  CLI::Command::CAMERA},
+            {"shutter", CLI::Command::SHUTTER},
             {"exit",    CLI::Command::EXIT},
             {"help",    CLI::Command::HELP}
     };
