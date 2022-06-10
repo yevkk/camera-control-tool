@@ -70,6 +70,7 @@ namespace edsdk_w::cli {
                     continue;
                 }
 
+                eds.events();
                 bool result;
                 switch (cmd) {
                     case Command::PROP: {
