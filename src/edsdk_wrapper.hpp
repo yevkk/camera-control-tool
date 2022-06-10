@@ -5,7 +5,7 @@
 #include <vector>
 #include <optional>
 #include <functional>
-#include "EDSDKTypes.h"
+#include <EDSDKTypes.h>
 
 namespace edsdk_w {
     class EDSDK {

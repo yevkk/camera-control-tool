@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.21)
-project(main)
+project(edsdkw)
 
 set(CMAKE_CXX_STANDARD 17)
 
 set(SRC_DIR ${CMAKE_SOURCE_DIR})
 
-set(LIB_NAME edsdkw)
+set(LIB_NAME ${PROJECT_NAME})
 
 set(EDSDK_DIR ${SRC_DIR}/edsdk)
 set(EDSDK_HEADER_DIR ${EDSDK_DIR}/include)
