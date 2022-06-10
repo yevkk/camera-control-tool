@@ -36,7 +36,6 @@ namespace edsdk_w::cli {
 
         static void run(std::istream &is = std::cin, bool repeat_commands = false) {
             EDSDK& eds = EDSDK::get_instance();
-            auto camera = eds.get_camera();
 
             while (true) {
                 std::cout << "#";
@@ -56,22 +55,47 @@ namespace edsdk_w::cli {
 
                 if ((cmd == Command::PROP ||
                     cmd == Command::UI ||
-                    cmd == Command::SESSION) && !(camera.has_value())) {
+                    cmd == Command::SESSION) && !(eds.get_camera().has_value())) {
                     std::cout << "error: camera is not set\n";
                     continue;
                 }
 
+                bool result;
                 switch (cmd) {
                     case Command::PROP: {
                         // TODO: implement
                         break;
                     }
                     case Command::UI: {
-                        // TODO: implement
+                        if (args.size() != 2) {
+                            std::cout << "error: wrong number of arguments\n";
+                        } else {
+                            if (args[1] == "lock") {
+                                result = eds.get_camera().value().get().lock_ui();
+                                std::cout << (result ? "ui locked successfully\n" : "failed to lock ui\n");
+                            } else if (args[1] == "unlock") {
+                                result = eds.get_camera().value().get().unlock_ui();
+                                std::cout << (result ? "ui unlocked successfully\n" : "failed to unlock ui\n");
+                            } else {
+                                std::cout << "error: unknown argument\n";
+                            }
+                        }
                         break;
                     }
                     case Command::SESSION: {
-                        // TODO: implement
+                        if (args.size() != 2) {
+                            std::cout << "error: wrong number of arguments\n";
+                        } else {
+                            if (args[1] == "open") {
+                                result = eds.get_camera().value().get().open_session();
+                                std::cout << (result ? "session opened successfully\n" : "failed to open session\n");
+                            } else if (args[1] == "close") {
+                                result = eds.get_camera().value().get().close_session();
+                                std::cout << (result ? "session closed successfully\n" : "failed to close session\n");
+                            } else {
+                                std::cout << "error: unknown argument\n";
+                            }
+                        }
                         break;
                     }
                     case Command::CAMERA: {
