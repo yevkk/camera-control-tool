@@ -99,7 +99,24 @@ namespace edsdk_w::cli {
                         break;
                     }
                     case Command::CAMERA: {
-                        // TODO: implement
+                        if (args.size() == 2 && args[1] == "list") {
+                            auto camera_list = eds.get_available_camera_list();
+                            if (camera_list.empty()) {
+                                std::cout << "No connected cameras\n";
+                            } else {
+                                for (int i = 0 ; i < camera_list.size(); i++) {
+                                    std::cout << i << " - " << camera_list[i] << std::endl;
+                                }
+                            }
+                        } else if (args.size() == 2 && args[1] == "reset") {
+                            result = eds.reset_camera();
+                            std::cout << (result ? "camera reset successfully\n" : "failed to reset camera\n");
+                        } else if (args.size() == 3 && args[1] == "set") {
+                            result = eds.set_camera(std::stoi(args[2]) - 1);
+                            std::cout << (result ? "camera set successfully\n" : "failed to set camera\n");
+                        } else {
+                            std::cout << "error: wrong number of arguments\n";
+                        }
                         break;
                     }
                     case Command::HELP: {
