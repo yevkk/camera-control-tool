@@ -61,16 +61,17 @@ namespace edsdk_w::cli {
                     continue;
                 }
 
+                eds.events();
                 auto cmd = _commands_map.find(args[0])->second;
 
                 if ((cmd == Command::PROP ||
                     cmd == Command::UI ||
-                    cmd == Command::SESSION) && !(eds.get_camera().has_value())) {
+                    cmd == Command::SESSION ||
+                    cmd == Command::SHUTTER) && !(eds.get_camera().has_value())) {
                     std::cout << "error: camera is not set\n";
                     continue;
                 }
 
-                eds.events();
                 bool result;
                 switch (cmd) {
                     case Command::PROP: {
@@ -227,6 +228,9 @@ namespace edsdk_w::cli {
                             result = eds.get_camera().value().get().shutter_button_press_halfway();
                         } else if (args[1] == "release") {
                             result = eds.get_camera().value().get().shutter_button_release();
+                        } else {
+                            std::cout << "error: unknown argument\n";
+                            break;
                         }
                         std::cout << (result ? "success\n" : "failed\n");
                         break;
